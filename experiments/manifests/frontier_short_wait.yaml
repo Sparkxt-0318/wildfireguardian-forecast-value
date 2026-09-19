@@ -1,0 +1,53 @@
+# REGRESSION FIXTURE for the non-monotone frontier path (F-10).
+#
+# Identical to frontier_direction_latency.yaml except max_wait = 0.8. With the
+# shorter wait the forecast becomes unavailable partway up the latency axis,
+# Delta J collapses to exactly zero there, and columns near -15 deg cross zero
+# TWICE: once where the forecast stops being worth acting on, and again where
+# it stops being available at all.
+#
+# If the frontier estimator is ever "simplified" to assume a single crossing,
+# this configuration is what catches it. Check that
+# estimate-frontier reports n_columns_multi_crossing > 0.
+name: frontier_short_wait
+seed: 11
+
+study:
+  n_worlds: 120
+
+degradation:
+  include_spotting: true
+  p_miss: 0.35
+
+latency:
+  information_time: 0.6
+  latency: 0.0
+
+policy:
+  max_wait: 0.8
+
+statistics:
+  n_boot: 1000
+  frontier_boot: 300
+  confidence: 0.95
+  equivalence_margin: 2.0
+
+sweep:
+  x:
+    name: eps_theta
+    kind: degradation
+    start: -0.5235987755982988
+    stop: 0.5235987755982988
+    num: 17
+    label: direction error (deg)
+    display_scale: 57.29577951308232
+  y:
+    name: latency
+    kind: latency
+    start: 0.0
+    stop: 1.3
+    num: 14
+    label: forecast latency (h)
+
+output:
+  dir: experiments/runs/frontier_short_wait

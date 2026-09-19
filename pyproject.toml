@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wildfireguardian-forecast-value"
+version = "0.1.0"
+description = "Experimental mathematics for wildfire forecast decision value: how good must a forecast be before it deserves to change a protective decision?"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [{ name = "WildfireGuardian research" }]
+keywords = ["wildfire", "forecast", "decision analysis", "value of information"]
+
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "pandas>=2.0",
+    "matplotlib>=3.7",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+parquet = ["pyarrow>=12.0"]
+dev = ["pytest>=7.4", "pyarrow>=12.0"]
+
+[project.scripts]
+wg-forecast-value = "wildfireguardian_forecast_value.cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["error::RuntimeWarning"]
+markers = ["slow: end-to-end runs that produce figures (deselect with -m 'not slow')"]

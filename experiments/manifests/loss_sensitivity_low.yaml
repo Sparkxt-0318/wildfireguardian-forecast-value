@@ -1,0 +1,36 @@
+# Loss-ratio sensitivity (F-07). Identical to default_study.yaml except for the
+# burnover/time exchange rate. Run all three and report the range of ratios over
+# which the SIGN of Delta J is stable -- not just the point estimate.
+#
+# Reference paired world-level study.
+#
+# The forecast is undegraded -- but note that "undegraded" is not
+# "clairvoyant": it is issued from information at t = 0.6 h and therefore
+# cannot contain a spot fire that ignites at t ~ 1.1 h. The realised value is
+# well short of perfect information for exactly that reason.
+name: loss_sensitivity_low
+seed: 11
+
+study:
+  n_worlds: 200
+
+latency:
+  information_time: 0.6
+  latency: 0.0
+
+policy:
+  # The decision maker will hold the evacuation order for up to 1.6 h waiting
+  # for a release. Waiting is not free: departures shift and the fire spreads.
+  max_wait: 1.6
+
+loss:
+  time_cost_per_hour: 1.0
+  burnover_loss: 10.0        # loss ratio L/c_t = 10
+
+statistics:
+  n_boot: 2000
+  confidence: 0.95
+  equivalence_margin: 2.0    # hours of equivalent delay; a policy input, not a default
+
+output:
+  dir: experiments/runs/loss_sensitivity_low

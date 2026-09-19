@@ -1,0 +1,48 @@
+# Frontier in (spread-rate error x latency).
+#
+# Read this one with F-14 in hand. eps_r is MULTIPLICATIVE and asymmetric:
+# +0.5 and -0.5 are not equally sized errors (1 h versus 3 h at the same
+# point). Any asymmetry visible in this frontier is partly the
+# parameterisation and partly the physics, and the two are not separable by
+# looking at the picture. Compare against a sweep in log(r_hat/r).
+name: rate_error_frontier
+seed: 11
+
+study:
+  n_worlds: 120
+
+degradation:
+  include_spotting: true
+  p_miss: 0.35
+
+latency:
+  information_time: 0.6
+  latency: 0.0
+
+policy:
+  max_wait: 1.6
+
+statistics:
+  n_boot: 1000
+  frontier_boot: 300
+  confidence: 0.95
+  equivalence_margin: 2.0
+
+sweep:
+  x:
+    name: eps_r
+    kind: degradation
+    start: -0.6
+    stop: 0.6
+    num: 13
+    label: spread-rate error (fraction)
+  y:
+    name: latency
+    kind: latency
+    start: 0.0
+    stop: 1.8
+    num: 19
+    label: forecast latency (h)
+
+output:
+  dir: experiments/runs/rate_error_frontier

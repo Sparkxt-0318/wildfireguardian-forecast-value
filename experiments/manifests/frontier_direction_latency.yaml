@@ -1,0 +1,51 @@
+# THE PRIMARY DEMONSTRATION.
+#
+# Break-even frontier in the (direction error x latency) plane. Every cell is
+# evaluated on the same 120 worlds (common random numbers), so cell-to-cell
+# differences are signal rather than Monte-Carlo noise -- and the bootstrap
+# band therefore resamples worlds jointly across the whole grid.
+#
+#   wg-forecast-value sweep experiments/manifests/frontier_direction_latency.yaml
+#   wg-forecast-value estimate-frontier experiments/runs/frontier_direction_latency/sweep.parquet
+name: frontier_direction_latency
+seed: 11
+
+study:
+  n_worlds: 120
+
+degradation:
+  include_spotting: true
+  p_miss: 0.35               # the forecast misses about a third of spot fires
+
+latency:
+  information_time: 0.6
+  latency: 0.0               # overridden by the y axis
+
+policy:
+  max_wait: 1.6
+
+statistics:
+  n_boot: 2000
+  frontier_boot: 400
+  confidence: 0.95
+  equivalence_margin: 2.0
+
+sweep:
+  x:
+    name: eps_theta
+    kind: degradation
+    start: -0.5235987755982988   # -30 deg
+    stop: 0.5235987755982988     # +30 deg
+    num: 17
+    label: direction error (deg)
+    display_scale: 57.29577951308232
+  y:
+    name: latency
+    kind: latency
+    start: 0.0
+    stop: 1.8
+    num: 19
+    label: forecast latency (h)
+
+output:
+  dir: experiments/runs/frontier_direction_latency

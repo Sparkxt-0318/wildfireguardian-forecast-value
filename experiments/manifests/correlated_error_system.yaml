@@ -1,0 +1,53 @@
+# What is this forecast SYSTEM worth, rather than what is an error of exactly
+# this size worth. A correlated error vector is drawn per world.
+#
+# The correlations are asserted, not measured -- this is a synthetic fixture.
+# They encode two claims worth arguing about:
+#   * direction and rate errors are positively coupled, because both follow
+#     from a wind error;
+#   * a model running the fire fast is more likely to have missed a spot
+#     ignition (spot_miss_u is a latent uniform; a LOWER value means missed,
+#     hence the negative correlation with eps_r).
+#
+# Reminder (F-02): these are correlations of the copula's LATENT normals, not
+# Pearson correlations of the sampled parameters. Report
+# CorrelatedErrorModel.realised_correlation() if you need the latter.
+name: correlated_error_system
+seed: 23
+
+study:
+  n_worlds: 400
+
+degradation:
+  include_spotting: true
+  p_miss: 0.35
+
+error_model:
+  channels:
+    eps_theta:            {kind: normal, mu: 0.0, sigma: 0.14}     # ~8 deg
+    eps_r:                {kind: normal, mu: 0.05, sigma: 0.25}    # slight fast bias
+    disp_magnitude:       {kind: half_normal, sigma: 0.8}          # km, non-negative
+    disp_heading:         {kind: uniform, low: -3.141592653589793, high: 3.141592653589793}
+    spot_miss_u:          {kind: uniform, low: 0.0, high: 1.0}     # latent; must be exact
+    spot_delay:           {kind: half_normal, sigma: 0.25}         # h, non-negative
+    spot_disp_magnitude:  {kind: half_normal, sigma: 0.7}
+    spot_disp_heading:    {kind: uniform, low: -3.141592653589793, high: 3.141592653589793}
+  correlation:
+    - [eps_theta, eps_r, 0.55]
+    - [eps_r, spot_miss_u, -0.45]
+    - [eps_theta, disp_magnitude, 0.30]
+
+latency:
+  information_time: 0.6
+  latency: 0.2
+
+policy:
+  max_wait: 1.6
+
+statistics:
+  n_boot: 2000
+  confidence: 0.95
+  equivalence_margin: 2.0
+
+output:
+  dir: experiments/runs/correlated_error_system
