@@ -75,11 +75,11 @@ def format_study_summary(s: dict) -> str:
         f"  Cohen's d_z / Hedges' g    {es['cohens_dz']:.3f} / {es['hedges_g']:.3f}",
         f"  worlds where action changed{s['fraction_worlds_action_changed']:>8.1%}",
         f"  worlds where forecast was available {s['fraction_worlds_forecast_available']:.1%}",
-        f"  mean fraction of VPI realised  "
+        f"  mean fraction of future-oracle value realised  "
         f"{vf.get('mean_value_fraction', float('nan')):.3f}"
         f"   [{vf.get('ci_low', float('nan')):.3f}, {vf.get('ci_high', float('nan')):.3f}]"
-        f"   (on {vf['n_worlds_with_positive_vpi']}/{vf['n_worlds']} worlds where perfect"
-        f" information was worth anything)",
+        f"   (on {vf['n_worlds_with_positive_future_oracle_value']}/{vf['n_worlds']} worlds"
+        f" where a future oracle would have been worth anything)",
         f"  two-sided p (t)            {ps['p_value']:.3g}"
         "   <- reported last and on purpose: with synthetic worlds this measures the"
         " compute budget, not the forecast",

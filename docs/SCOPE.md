@@ -1,5 +1,10 @@
 # Scope
 
+> **v0.1 is frozen.** Everything below describes the constructed benchmark and
+> what it deliberately leaves out. For what the repository is *for* after the
+> freeze, see [`REPOSITORY_ROLE.md`](REPOSITORY_ROLE.md); for what its results
+> do and do not establish, [`CURRENT_RESULT_STATUS.md`](CURRENT_RESULT_STATUS.md).
+
 ## In scope (v0.1)
 
 * **Forecast degradation operators** with explicit, documented semantics:
@@ -9,7 +14,7 @@
   availability clocks, and a decision maker who may wait.
 * **A synthetic decision laboratory**: small, hand-checkable evacuation
   scenarios with two routes, a forecast-free trigger baseline, a plug-in
-  forecast policy, and a clairvoyant upper bound.
+  forecast policy, and a future-oracle upper bound.
 * **A generic downstream loss** `J(a, omega)` with an explicit, swappable
   exchange rate between travel time and burnover.
 * **Paired world-level statistics**: cluster bootstrap, effect sizes,
@@ -36,10 +41,14 @@
 
 ## What a reader may and may not conclude
 
-**May:** that the distinction between skill and decision value is real,
-quantifiable, and large; that the machinery to quantify it works and is
-validated against closed-form answers; that a break-even frontier can be
-estimated with honest uncertainty.
+**May:** that conventional forecast skill is not sufficient, in general, to
+uniquely determine downstream decision value; that the machinery to quantify
+the difference works and is validated against closed-form answers; that a
+break-even frontier can be estimated with honest uncertainty and without
+assuming monotonicity.
 
-**May not:** anything about how good any real wildfire forecast is, what
-latency any real agency should demand, or where any real break-even sits.
+**May not:** anything about how *often* skill and decision value diverge in
+reality, how good any real wildfire forecast is, what latency any real agency
+should demand, or where any real break-even sits. The numeric breakpoints in
+the figures are properties of a constructed geometry
+([`PARAMETER_PROVENANCE.md`](PARAMETER_PROVENANCE.md)).

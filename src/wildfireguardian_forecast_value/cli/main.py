@@ -53,6 +53,13 @@ from wildfireguardian_forecast_value.skill_metrics.categorical import categorica
 from wildfireguardian_forecast_value.synthetic_decisions.scenarios import CASES, case_specs
 from wildfireguardian_forecast_value.validation.hand_examples import run_hand_examples
 from wildfireguardian_forecast_value.validation.invariants import run_all_invariants
+from wildfireguardian_forecast_value.benchmark_fixtures import (
+    FIXTURE_DIR,
+    build_all_fixtures,
+    load_fixture,
+    write_fixtures,
+)
+from wildfireguardian_forecast_value.cli.metrics import collect_metrics, write_metrics
 
 BANNER = (
     "wildfireguardian-forecast-value "
@@ -323,7 +330,8 @@ def cmd_cases(args) -> int:
             rows.append((f"{key}\n{arm.label}", r.skill["csi"], frac))
         print(f"    claim: {c.claim}\n")
 
-    ranked = sorted((r for r in rows if "perfect" not in r[0]), key=lambda t: -t[1])
+    ranked = sorted((r for r in rows if "present_state_oracle" not in r[0]),
+                    key=lambda t: -t[1])
     print("Ranked by footprint CSI, best first -- and the value column is close to reversed:")
     for lab, csi, frac in ranked:
         print(f"  CSI {csi:.3f}   value {'n/a' if not np.isfinite(frac) else f'{frac:5.1%}'}"
@@ -334,7 +342,7 @@ def cmd_cases(args) -> int:
         out = Path(args.out)
         out.mkdir(parents=True, exist_ok=True)
         pretty = [(lab.replace("_", " "), csi, frac) for lab, csi, frac in rows
-                  if "perfect" not in lab]
+                  if "present_state_oracle" not in lab]
         plot_case_comparison(pretty, path=str(out / "case_comparison.png"))
         print(f"\nwrote {out/'case_comparison.png'}")
     return 0
@@ -393,7 +401,7 @@ def cmd_demo(args) -> int:
     for key in CASES:
         c = case_specs()[key]
         for arm in c.arms:
-            if arm.label == "perfect":
+            if arm.label == "present_state_oracle":
                 continue
             r = evaluate_world(c.scenario(scenario), c.world(arm, scenario), pipe,
                                arm.degradation_params,
@@ -453,6 +461,85 @@ def cmd_demo(args) -> int:
     return 0
 
 
+def cmd_freeze_benchmarks(args) -> int:
+    """Rebuild the frozen benchmark fixtures, or check the committed ones."""
+    root = Path(args.root)
+    print(BANNER)
+    built = build_all_fixtures()
+    if args.write:
+        paths = write_fixtures(root)
+        print(f"\nwrote {len(paths)} fixture(s) to {root / FIXTURE_DIR}")
+        for pth in paths:
+            print(f"  {pth.name}")
+        print("\nThese are CONSTRUCTED_BENCHMARK records, not measurements.")
+        print("Review the diff before committing: a changed fixture is a changed claim.")
+        return 0
+
+    print(f"\nChecking {len(built)} frozen fixture(s) against a fresh recomputation:\n")
+    mismatched = []
+    for name, fresh in built.items():
+        try:
+            stored = load_fixture(name, root)
+        except FileNotFoundError as exc:
+            print(f"  [MISSING]  {name}")
+            print(f"             {exc}")
+            mismatched.append(name)
+            continue
+        diffs = _diff_fixture(stored, fresh)
+        if diffs:
+            print(f"  [CHANGED]  {name}")
+            for d in diffs[:8]:
+                print(f"             {d}")
+            mismatched.append(name)
+        else:
+            print(f"  [ok]       {name}"
+                  f"   dJ={fresh['decision_value']['delta_j']:+8.3f}"
+                  f"   CSI={fresh['skill_metrics'].get('csi', float('nan')):.3f}")
+    if mismatched:
+        print(f"\n{len(mismatched)} fixture(s) differ from the frozen record.")
+        print("This is a question to answer, not a file to refresh. If the change is a")
+        print("genuine defect fix, re-freeze with --write and say so in the commit.")
+        return 1
+    print("\nAll frozen fixtures reproduce exactly.")
+    return 0
+
+
+def _diff_fixture(stored: dict, fresh: dict, prefix: str = "") -> list[str]:
+    """Structural diff, ignoring fields that legitimately move between runs."""
+    ignore = {"package_version"}
+    out: list[str] = []
+    keys = sorted(set(stored) | set(fresh))
+    for k in keys:
+        if k in ignore:
+            continue
+        where = f"{prefix}{k}"
+        a, b = stored.get(k, "<absent>"), fresh.get(k, "<absent>")
+        if isinstance(a, dict) and isinstance(b, dict):
+            out.extend(_diff_fixture(a, b, where + "."))
+        elif isinstance(a, (int, float)) and isinstance(b, (int, float)) \
+                and not isinstance(a, bool) and not isinstance(b, bool):
+            if not np.isclose(a, b, rtol=0.0, atol=1e-9, equal_nan=True):
+                out.append(f"{where}: {a!r} -> {b!r}")
+        elif a != b:
+            out.append(f"{where}: {a!r} -> {b!r}")
+    return out
+
+
+def cmd_release_metrics(args) -> int:
+    """Measure the repository and write reports/generated_metrics.{json,md}."""
+    print(BANNER)
+    print("\nCollecting repository metrics (this runs pytest's collector)...")
+    m = collect_metrics(args.root, run_pytest=not args.no_pytest)
+    js, md = write_metrics(m, Path(args.root) / args.out)
+    print()
+    for k, v in m.as_dict().items():
+        if k != "notes":
+            print(f"  {k:32s} {v}")
+    print(f"\nwrote {js}\nwrote {md}")
+    print("\nNo other document states a count; they link to this file.")
+    return 0
+
+
 # ------------------------------------------------------------------ parser --
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
@@ -496,6 +583,21 @@ def build_parser() -> argparse.ArgumentParser:
     v.add_argument("config", nargs="?", default=None)
     v.add_argument("-v", "--verbose", action="store_true", help="print every derivation")
     v.set_defaults(func=cmd_validate)
+
+    b = sub.add_parser("freeze-benchmarks",
+                       help="check (or rewrite) the frozen benchmark fixtures")
+    b.add_argument("--root", default=".")
+    b.add_argument("--write", action="store_true",
+                   help="rewrite the fixtures instead of checking them")
+    b.set_defaults(func=cmd_freeze_benchmarks)
+
+    rm = sub.add_parser("release-metrics",
+                        help="measure the repository; no count is hand-maintained")
+    rm.add_argument("--root", default=".")
+    rm.add_argument("--out", default="reports")
+    rm.add_argument("--no-pytest", action="store_true",
+                    help="skip the pytest collection step")
+    rm.set_defaults(func=cmd_release_metrics)
 
     m = sub.add_parser("demo", help="produce every figure and result in one go")
     m.add_argument("config", nargs="?", default=None)

@@ -185,7 +185,7 @@ def hand_examples() -> list[HandExample]:
         expected=np.array([0.9, 0.0, 1.0, 0.5]),
     ))
 
-    # -- 6. information time forbids clairvoyance ---------------------------
+    # -- 6. information time forbids future-oracle leakage ------------------
     def _known():
         st = FireState((
             _wedge(),
@@ -195,10 +195,11 @@ def hand_examples() -> list[HandExample]:
         return np.array([len(known_at(st, 1.0)), len(known_at(st, 1.2)), len(known_at(st, 2.0))])
 
     ex.append(HandExample(
-        key="V6_no_clairvoyance",
-        title="A forecast cannot contain an ignition that has not happened",
+        key="V6_conditional_on_information_time",
+        title="A CONDITIONAL_FORECAST cannot contain an ignition that has not happened",
         derivation=(
             "Truth has a main front (t0 = 0) and a spot fire igniting at t0 = 1.2 h.\n"
+            "A release that kept the spot would be a FUTURE_ORACLE, not a forecast.\n"
             "  information time 1.0 h -> 1 source: the spot has not happened yet;\n"
             "  information time 1.2 h -> 2 sources: it has just happened (inclusive);\n"
             "  information time 2.0 h -> 2 sources."

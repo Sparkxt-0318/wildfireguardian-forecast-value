@@ -143,8 +143,10 @@ class TestSpotting:
         with pytest.raises(ValueError, match="latent uniform"):
             SpotMiss(p_miss=0.5).apply(two_source_state, {"spot_miss_u": 1.5})
 
-    def test_negative_delay_is_clairvoyance_and_is_rejected(self, two_source_state):
-        with pytest.raises(ValueError, match="clairvoyance"):
+    def test_negative_delay_is_future_oracle_information_and_is_rejected(
+            self, two_source_state):
+        """Predicting an ignition before it happens is not error, it is leakage."""
+        with pytest.raises(ValueError, match="future-oracle"):
             SpotDelay().apply(two_source_state, {"spot_delay": -0.1})
 
     def test_delay_moves_only_the_spot(self, two_source_state):

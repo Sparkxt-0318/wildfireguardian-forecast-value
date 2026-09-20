@@ -75,7 +75,7 @@ class RouteChoiceLoss(LossModel):
         the whole ethical content of the study.
     near_miss_penalty, near_miss_margin:
         Optional convexity: an extra ``near_miss_penalty`` (scaled linearly to
-        zero at ``near_miss_margin`` hours of slack) for surviving with very
+        zero at ``near_miss_margin`` hours of slack) for clearing the route with very
         little margin.  Off by default.  It exists so that studies can check
         whether the frontier's shape depends on ``J`` being a step function;
         it usually does.

@@ -24,10 +24,12 @@ single-valued, or non-empty.
 **Burnover** — a receptor being reached by the fire while still on the route.
 A step term in `J`.
 
-**Clairvoyance** — a forecast containing information it could not have had at
-its information time. Structurally prevented; `check_no_clairvoyance` raises
-on it. Note that *zero degradation* is not clairvoyance: an un-degraded
-forecast still cannot see a spot fire that has not ignited.
+**Future-oracle leakage** — a forecast containing information it could not
+have had at its information time, which makes it a `FUTURE_ORACLE` rather
+than a forecast. Structurally prevented;
+`check_conditional_on_information_time` raises on it. Note that *zero
+degradation* is not leakage: an un-degraded forecast still cannot see a spot
+fire that has not ignited.
 
 **Cluster bootstrap** — resampling **worlds**, whole, with replacement. The
 only correct resampling unit here.
@@ -117,8 +119,11 @@ be missed, delayed or displaced by the error model; never fabricated (F-08).
 **TOST** — two one-sided tests; the equivalence procedure. Implemented as
 interval inclusion.
 
-**VPI** (value of perfect information) — `J_baseline - J_clairvoyant`. The
-most any forecast could be worth in a world; the denominator of the fraction.
+**Future-oracle value** (`FOV`) — `J_baseline - J_future_oracle`. The most
+any information could be worth in a world; the denominator of the fraction.
+Previously called *value of perfect information*; renamed because "perfect"
+is ambiguous between knowing the present exactly and knowing the realised
+future. `WorldResult.vpi` remains as a deprecated alias.
 
 **Wedge** — the fire model: a circular sector spreading at constant rate from
 an origin. Chosen for hand-checkability (D-01); its hard edge is A-02.

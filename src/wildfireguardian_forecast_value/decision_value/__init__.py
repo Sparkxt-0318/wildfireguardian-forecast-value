@@ -1,4 +1,4 @@
-"""Downstream loss, paired-world decision value, and value of perfect information."""
+"""Downstream loss, paired-world decision value, and the future-oracle bound."""
 
 from wildfireguardian_forecast_value.decision_value.loss import (
     LossModel,

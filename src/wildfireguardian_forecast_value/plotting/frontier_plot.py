@@ -13,6 +13,7 @@ from wildfireguardian_forecast_value.frontiers.estimate import frontier_from_gri
 from wildfireguardian_forecast_value.plotting.style import (
     SERIES,
     TOKENS,
+    add_benchmark_banner,
     apply_axes_style,
     diverging_cmap,
     symmetric_norm,
@@ -103,10 +104,8 @@ def plot_frontier(
                     frameon=False, fontsize=8.5)
     for t in leg.get_texts():
         t.set_color(TOKENS["text_secondary"])
-    fig.text(0.01, 0.005,
-             "Synthetic fixtures only. Not a claim about real wildfire forecast performance.",
-             color=TOKENS["text_muted"], fontsize=8)
-    fig.tight_layout(rect=(0, 0.02, 1, 1))
+    fig.tight_layout(rect=(0, 0.075, 1, 0.965))
+    add_benchmark_banner(fig)
     if path:
         fig.savefig(path, dpi=170, facecolor=TOKENS["surface"])
         plt.close(fig)
@@ -172,7 +171,8 @@ def plot_scenario_map(scenario, world, times=(1.0, 2.0, 3.0), path: str | None =
                     edgecolor=TOKENS["grid"])
     for t in leg.get_texts():
         t.set_color(TOKENS["text_secondary"])
-    fig.tight_layout()
+    fig.tight_layout(rect=(0, 0.075, 1, 0.965))
+    add_benchmark_banner(fig)
     if path:
         fig.savefig(path, dpi=170, facecolor=TOKENS["surface"])
         plt.close(fig)

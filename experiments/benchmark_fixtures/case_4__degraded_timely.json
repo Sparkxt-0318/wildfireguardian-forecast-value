@@ -1,0 +1,320 @@
+{
+  "schema_version": 1,
+  "result_status": "CONSTRUCTED_BENCHMARK",
+  "package_version": "0.1.0",
+  "case_key": "case_4",
+  "case_title": "The more accurate forecast is worth less, because it is late",
+  "arm_label": "degraded_timely",
+  "declared_forecast_class": "DEGRADED_FORECAST",
+  "computed_forecast_class": "DEGRADED_FORECAST",
+  "geometry": {
+    "community": [
+      2.0,
+      8.0
+    ],
+    "safe_haven": [
+      16.0,
+      12.0
+    ],
+    "route_a_via": [
+      9.0,
+      3.0
+    ],
+    "route_b_via": [
+      [
+        -1.0,
+        11.0
+      ],
+      [
+        16.0,
+        11.0
+      ]
+    ],
+    "speed_kmh": 20.0,
+    "route_sample_spacing_km": 0.05,
+    "half_angle_deg": 30.0,
+    "decision_time_h": 1.0,
+    "n_receptors": 40,
+    "departure_span_h": 0.25,
+    "trigger_distance_km": 1.5,
+    "skill_horizon_h": 2.5,
+    "grid": {
+      "x_min": -2.0,
+      "x_max": 20.0,
+      "y_min": -4.0,
+      "y_max": 18.0,
+      "nx": 110,
+      "ny": 110
+    },
+    "routes": {
+      "routes": [
+        {
+          "name": "route_a",
+          "waypoints": [
+            [
+              2.0,
+              8.0
+            ],
+            [
+              9.0,
+              3.0
+            ],
+            [
+              16.0,
+              12.0
+            ]
+          ],
+          "speed": 20.0,
+          "sample_spacing": 0.05,
+          "length_km": 20.004079518034004,
+          "travel_time_h": 1.0002039759017003
+        },
+        {
+          "name": "route_b",
+          "waypoints": [
+            [
+              2.0,
+              8.0
+            ],
+            [
+              -1.0,
+              11.0
+            ],
+            [
+              16.0,
+              11.0
+            ],
+            [
+              16.0,
+              12.0
+            ]
+          ],
+          "speed": 20.0,
+          "sample_spacing": 0.05,
+          "length_km": 22.242640687119284,
+          "travel_time_h": 1.1121320343559642
+        }
+      ]
+    }
+  },
+  "truth": {
+    "world_params": {
+      "heading": 0.08726646259971647,
+      "rate": 6.0,
+      "ignition": [
+        0.0,
+        0.0
+      ],
+      "has_spot": false
+    },
+    "state": {
+      "sources": [
+        {
+          "origin": [
+            0.0,
+            0.0
+          ],
+          "ignition_time": 0.0,
+          "spread_rate": 6.0,
+          "heading": 0.08726646259971638,
+          "half_angle": 0.5235987755982988,
+          "label": "main",
+          "kind": "primary"
+        }
+      ]
+    },
+    "departure_times_h": [
+      1.0,
+      1.0064102564102564,
+      1.0128205128205128,
+      1.0192307692307692,
+      1.0256410256410255,
+      1.032051282051282,
+      1.0384615384615385,
+      1.044871794871795,
+      1.0512820512820513,
+      1.0576923076923077,
+      1.064102564102564,
+      1.0705128205128205,
+      1.0769230769230769,
+      1.0833333333333333,
+      1.0897435897435896,
+      1.0961538461538463,
+      1.1025641025641026,
+      1.108974358974359,
+      1.1153846153846154,
+      1.1217948717948718,
+      1.1282051282051282,
+      1.1346153846153846,
+      1.141025641025641,
+      1.1474358974358974,
+      1.1538461538461537,
+      1.1602564102564101,
+      1.1666666666666667,
+      1.1730769230769231,
+      1.1794871794871795,
+      1.185897435897436,
+      1.1923076923076923,
+      1.1987179487179487,
+      1.205128205128205,
+      1.2115384615384615,
+      1.217948717948718,
+      1.2243589743589745,
+      1.2307692307692308,
+      1.2371794871794872,
+      1.2435897435897436,
+      1.25
+    ]
+  },
+  "forecast": {
+    "degradation_params": {
+      "eps_r": 0.35,
+      "eps_theta": 0.15707963267948966
+    },
+    "pipeline": {
+      "operators": [
+        {
+          "operator": "direction_error",
+          "selector": {
+            "kinds": [
+              "primary"
+            ],
+            "labels": null
+          },
+          "rotate_isotropic": false
+        },
+        {
+          "operator": "spread_rate_error",
+          "selector": {
+            "kinds": null,
+            "labels": null
+          },
+          "clip_to": null,
+          "on_domain_error": "raise"
+        },
+        {
+          "operator": "spatial_displacement",
+          "selector": {
+            "kinds": [
+              "primary"
+            ],
+            "labels": null
+          },
+          "mode": "polar",
+          "relative_to_heading": true,
+          "param_prefix": "disp"
+        },
+        {
+          "operator": "spot_miss",
+          "selector": {
+            "kinds": [
+              "spot"
+            ],
+            "labels": null
+          },
+          "p_miss": 0.0
+        },
+        {
+          "operator": "spot_delay",
+          "selector": {
+            "kinds": [
+              "spot"
+            ],
+            "labels": null
+          }
+        },
+        {
+          "operator": "spot_displacement",
+          "selector": {
+            "kinds": [
+              "spot"
+            ],
+            "labels": null
+          },
+          "mode": "polar",
+          "relative_to_heading": false,
+          "param_prefix": "spot_disp"
+        }
+      ]
+    },
+    "state": {
+      "sources": [
+        {
+          "origin": [
+            0.0,
+            0.0
+          ],
+          "ignition_time": 0.0,
+          "spread_rate": 8.100000000000001,
+          "heading": 0.24434609527920603,
+          "half_angle": 0.5235987755982988,
+          "label": "main",
+          "kind": "primary"
+        }
+      ]
+    }
+  },
+  "availability": {
+    "information_time_h": 1.0,
+    "latency_h": 0.0,
+    "availability_time_h": 1.0,
+    "decision_time_h": 1.0,
+    "available_at_decision_time": true,
+    "information_age_at_decision_h": 0.0
+  },
+  "skill_metrics": {
+    "arrival_mae": 0.432483055347958,
+    "arrival_rmse": 0.45866001007213286,
+    "arrival_bias": -0.432483055347958,
+    "arrival_coverage": 0.2068595041322314,
+    "n_miss_cells": 270,
+    "n_false_cells": 2714,
+    "csi": 0.4561691270275196,
+    "pod": 0.9026325279480707,
+    "far": 0.5202223500095841,
+    "frequency_bias": 1.88135593220339,
+    "horizon": 2.5,
+    "heading_error_deg": 9.0,
+    "rate_ratio": 1.3500000000000003,
+    "origin_error_km": 0.0,
+    "n_spots_truth": 0,
+    "n_spots_forecast": 0,
+    "release_used": "forecast"
+  },
+  "actions": {
+    "baseline_action": "route_a",
+    "forecast_aware_action": "route_b",
+    "future_oracle_action": "route_b",
+    "action_changed": true,
+    "forecast_waited": false,
+    "departure_delay_h": 0.0
+  },
+  "loss": {
+    "model": {
+      "time_cost_per_hour": 1.0,
+      "burnover_loss": 50.0,
+      "near_miss_penalty": 0.0,
+      "near_miss_margin": 0.0,
+      "name": "route_choice_loss",
+      "loss_ratio": 50.0
+    },
+    "j_baseline": 37.2502039759017,
+    "j_forecast": 1.1121320343559642,
+    "j_future_oracle": 1.1121320343559642
+  },
+  "decision_value": {
+    "delta_j": 36.13807194154573,
+    "future_oracle_value": 36.13807194154573,
+    "value_fraction": 1.0,
+    "value_fraction_is_undefined": false
+  },
+  "expected": {
+    "baseline_action": "route_a",
+    "forecast_aware_action": "route_b",
+    "delta_sign": 1,
+    "value_fraction": 1.0
+  },
+  "hand_derivation": "Same nominal world; decision time t_d = 1.0 h.\n  accurate_late:   s = 1.0, delta = 0.5 -> available at 1.5 h > 1.0 h.\n                   Not in the information set. The policy falls back to the\n                   trigger and the release's skill is irrelevant to the action.\n  degraded_timely: s = 1.0, delta = 0.0 -> available at 1.0 h <= 1.0 h.\n                   Degraded (rate +35%, heading +9 deg) yet it still places route A\n                   inside the predicted burn, so it selects route B.\nAvailability is a step at s + delta, so the accurate release's Delta J is exactly\n0 -- not negative. An absent forecast leaves the decision maker exactly as they\nwere, which is why a latency score penalty cannot reproduce this ordering.",
+  "expected_interpretation": "An unavailable high-skill release has exactly zero decision value while a lower-skill available one has positive value. Establishes that latency must be modelled as availability, not as a penalty on a score. The 0.5 h latency is a constructed value chosen to straddle the decision time; it is not a requirement on any real system.",
+  "claim": "Two forecasts of the same world. The first is a PRESENT_STATE_ORACLE (RMSE 0, CSI 1.00) but has 0.5 h of latency, so at the decision time it does not exist: the decision maker falls back to the trigger and realises zero value. The second is markedly worse (CSI 0.46) but arrives in time, and realises all of it. Latency is modelled as availability, not as a penalty on a score; a score penalty cannot produce this ordering."
+}

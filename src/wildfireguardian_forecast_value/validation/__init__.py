@@ -11,6 +11,7 @@ from wildfireguardian_forecast_value.validation.invariants import (
     check_baseline_is_forecast_free,
     check_identity_degradation,
     check_latency_semantics,
+    check_conditional_on_information_time,
     check_no_clairvoyance,
     check_no_oracle_access,
     check_pairing,
@@ -20,6 +21,6 @@ from wildfireguardian_forecast_value.validation.invariants import (
 __all__ = [
     "HandExample", "hand_examples", "run_hand_examples",
     "InvariantError", "InvariantReport", "run_all_invariants",
-    "check_no_clairvoyance", "check_no_oracle_access", "check_baseline_is_forecast_free",
+    "check_conditional_on_information_time", "check_no_clairvoyance", "check_no_oracle_access", "check_baseline_is_forecast_free",
     "check_pairing", "check_identity_degradation", "check_latency_semantics",
 ]

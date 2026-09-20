@@ -20,6 +20,7 @@ from wildfireguardian_forecast_value.degradation.latency import ForecastStream
 
 __all__ = [
     "InvariantError",
+    "check_conditional_on_information_time",
     "check_no_clairvoyance",
     "check_no_oracle_access",
     "check_baseline_is_forecast_free",
@@ -34,26 +35,28 @@ class InvariantError(AssertionError):
     """A structural assumption of the experiment has been violated."""
 
 
-def check_no_clairvoyance(release) -> None:
+def check_conditional_on_information_time(release) -> None:
     """A release may not contain a source that ignites after its information time.
 
-    Violating this is the single most attractive bug in a study like this,
-    because it makes the forecast look good in exactly the worlds where being
-    good matters most (the ones with a late spot ignition).
+    A release that does is a ``FUTURE_ORACLE``, not a forecast.  Violating this
+    is the single most attractive bug in a study like this, because it makes
+    the forecast look good in exactly the worlds where being good matters most
+    (the ones with a late spot ignition).
     """
     s = release.information_time
     bad = [src.label for src in release.state.sources if src.ignition_time > s + 1e-12]
     if bad:
         raise InvariantError(
             f"forecast release {release.label!r} built from information time {s} contains "
-            f"source(s) {bad} that ignite later. The release is clairvoyant. Build it with "
+            f"source(s) {bad} that ignite later. The release is a FUTURE_ORACLE, not a "
+            f"forecast. Build it with "
             f"degradation.latency.make_release(), which restricts to known_at(truth, s) first."
         )
 
 
 def check_no_oracle_access(policy, ctx) -> None:
-    """A non-clairvoyant policy must choose the same action with the truth removed."""
-    if getattr(policy, "name", "") == "clairvoyant":
+    """A non-oracle policy must choose the same action with the truth removed."""
+    if getattr(policy, "name", "") in ("future_oracle", "clairvoyant"):
         return
     with_truth = policy.decide(ctx)
     without = policy.decide(replace(ctx, truth_state=None))
@@ -61,7 +64,7 @@ def check_no_oracle_access(policy, ctx) -> None:
         raise InvariantError(
             f"policy {getattr(policy, 'name', policy)!r} changes its decision when the oracle "
             f"truth state is removed ({with_truth} vs {without}). It is reading "
-            "DecisionContext.truth_state, which only ClairvoyantPolicy may do."
+            "DecisionContext.truth_state, which only FutureOraclePolicy may do."
         )
 
 
@@ -155,8 +158,8 @@ def run_all_invariants(scenario, pipeline, policies, seed: int = 0) -> Invariant
 
     rel = make_release(world.truth, information_time=scenario.decision_time - 0.4,
                        latency=0.2, pipeline=pipeline, params=pipeline.identity_params())
-    check_no_clairvoyance(rel)
-    ran.append("no_clairvoyance")
+    check_conditional_on_information_time(rel)
+    ran.append("conditional_on_information_time")
     check_latency_semantics(rel, scenario.decision_time)
     ran.append("latency_semantics")
 
@@ -168,3 +171,7 @@ def run_all_invariants(scenario, pipeline, policies, seed: int = 0) -> Invariant
     ran.append("no_oracle_access")
 
     return InvariantReport(tuple(ran))
+
+
+#: Backwards-compatible alias for the pre-freeze name.
+check_no_clairvoyance = check_conditional_on_information_time

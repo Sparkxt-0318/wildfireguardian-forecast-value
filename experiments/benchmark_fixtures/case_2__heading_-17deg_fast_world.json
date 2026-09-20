@@ -1,0 +1,319 @@
+{
+  "schema_version": 1,
+  "result_status": "CONSTRUCTED_BENCHMARK",
+  "package_version": "0.1.0",
+  "case_key": "case_2",
+  "case_title": "A small error flips the optimal decision",
+  "arm_label": "heading_-17deg_fast_world",
+  "declared_forecast_class": "DEGRADED_FORECAST",
+  "computed_forecast_class": "DEGRADED_FORECAST",
+  "geometry": {
+    "community": [
+      2.0,
+      8.0
+    ],
+    "safe_haven": [
+      16.0,
+      12.0
+    ],
+    "route_a_via": [
+      9.0,
+      3.0
+    ],
+    "route_b_via": [
+      [
+        -1.0,
+        11.0
+      ],
+      [
+        16.0,
+        11.0
+      ]
+    ],
+    "speed_kmh": 20.0,
+    "route_sample_spacing_km": 0.05,
+    "half_angle_deg": 30.0,
+    "decision_time_h": 1.0,
+    "n_receptors": 40,
+    "departure_span_h": 0.25,
+    "trigger_distance_km": 1.5,
+    "skill_horizon_h": 2.5,
+    "grid": {
+      "x_min": -2.0,
+      "x_max": 20.0,
+      "y_min": -4.0,
+      "y_max": 18.0,
+      "nx": 110,
+      "ny": 110
+    },
+    "routes": {
+      "routes": [
+        {
+          "name": "route_a",
+          "waypoints": [
+            [
+              2.0,
+              8.0
+            ],
+            [
+              9.0,
+              3.0
+            ],
+            [
+              16.0,
+              12.0
+            ]
+          ],
+          "speed": 20.0,
+          "sample_spacing": 0.05,
+          "length_km": 20.004079518034004,
+          "travel_time_h": 1.0002039759017003
+        },
+        {
+          "name": "route_b",
+          "waypoints": [
+            [
+              2.0,
+              8.0
+            ],
+            [
+              -1.0,
+              11.0
+            ],
+            [
+              16.0,
+              11.0
+            ],
+            [
+              16.0,
+              12.0
+            ]
+          ],
+          "speed": 20.0,
+          "sample_spacing": 0.05,
+          "length_km": 22.242640687119284,
+          "travel_time_h": 1.1121320343559642
+        }
+      ]
+    }
+  },
+  "truth": {
+    "world_params": {
+      "heading": 0.08726646259971647,
+      "rate": 7.0,
+      "ignition": [
+        0.0,
+        0.0
+      ],
+      "has_spot": false
+    },
+    "state": {
+      "sources": [
+        {
+          "origin": [
+            0.0,
+            0.0
+          ],
+          "ignition_time": 0.0,
+          "spread_rate": 7.0,
+          "heading": 0.08726646259971638,
+          "half_angle": 0.5235987755982988,
+          "label": "main",
+          "kind": "primary"
+        }
+      ]
+    },
+    "departure_times_h": [
+      1.0,
+      1.0064102564102564,
+      1.0128205128205128,
+      1.0192307692307692,
+      1.0256410256410255,
+      1.032051282051282,
+      1.0384615384615385,
+      1.044871794871795,
+      1.0512820512820513,
+      1.0576923076923077,
+      1.064102564102564,
+      1.0705128205128205,
+      1.0769230769230769,
+      1.0833333333333333,
+      1.0897435897435896,
+      1.0961538461538463,
+      1.1025641025641026,
+      1.108974358974359,
+      1.1153846153846154,
+      1.1217948717948718,
+      1.1282051282051282,
+      1.1346153846153846,
+      1.141025641025641,
+      1.1474358974358974,
+      1.1538461538461537,
+      1.1602564102564101,
+      1.1666666666666667,
+      1.1730769230769231,
+      1.1794871794871795,
+      1.185897435897436,
+      1.1923076923076923,
+      1.1987179487179487,
+      1.205128205128205,
+      1.2115384615384615,
+      1.217948717948718,
+      1.2243589743589745,
+      1.2307692307692308,
+      1.2371794871794872,
+      1.2435897435897436,
+      1.25
+    ]
+  },
+  "forecast": {
+    "degradation_params": {
+      "eps_theta": -0.29670597283903605
+    },
+    "pipeline": {
+      "operators": [
+        {
+          "operator": "direction_error",
+          "selector": {
+            "kinds": [
+              "primary"
+            ],
+            "labels": null
+          },
+          "rotate_isotropic": false
+        },
+        {
+          "operator": "spread_rate_error",
+          "selector": {
+            "kinds": null,
+            "labels": null
+          },
+          "clip_to": null,
+          "on_domain_error": "raise"
+        },
+        {
+          "operator": "spatial_displacement",
+          "selector": {
+            "kinds": [
+              "primary"
+            ],
+            "labels": null
+          },
+          "mode": "polar",
+          "relative_to_heading": true,
+          "param_prefix": "disp"
+        },
+        {
+          "operator": "spot_miss",
+          "selector": {
+            "kinds": [
+              "spot"
+            ],
+            "labels": null
+          },
+          "p_miss": 0.0
+        },
+        {
+          "operator": "spot_delay",
+          "selector": {
+            "kinds": [
+              "spot"
+            ],
+            "labels": null
+          }
+        },
+        {
+          "operator": "spot_displacement",
+          "selector": {
+            "kinds": [
+              "spot"
+            ],
+            "labels": null
+          },
+          "mode": "polar",
+          "relative_to_heading": false,
+          "param_prefix": "spot_disp"
+        }
+      ]
+    },
+    "state": {
+      "sources": [
+        {
+          "origin": [
+            0.0,
+            0.0
+          ],
+          "ignition_time": 0.0,
+          "spread_rate": 7.0,
+          "heading": -0.20943951023931984,
+          "half_angle": 0.5235987755982988,
+          "label": "main",
+          "kind": "primary"
+        }
+      ]
+    }
+  },
+  "availability": {
+    "information_time_h": 1.0,
+    "latency_h": 0.0,
+    "availability_time_h": 1.0,
+    "decision_time_h": 1.0,
+    "available_at_decision_time": true,
+    "information_age_at_decision_h": 0.0
+  },
+  "skill_metrics": {
+    "arrival_mae": 0.0,
+    "arrival_rmse": 0.0,
+    "arrival_bias": 0.0,
+    "arrival_coverage": 0.20677685950413224,
+    "n_miss_cells": 1135,
+    "n_false_cells": 207,
+    "csi": 0.6508844953173777,
+    "pod": 0.6879296123178443,
+    "far": 0.07641196013289037,
+    "frequency_bias": 0.7448446521858675,
+    "horizon": 2.5,
+    "heading_error_deg": -17.00000000000001,
+    "rate_ratio": 1.0,
+    "origin_error_km": 0.0,
+    "n_spots_truth": 0,
+    "n_spots_forecast": 0,
+    "release_used": "forecast"
+  },
+  "actions": {
+    "baseline_action": "route_b",
+    "forecast_aware_action": "route_a",
+    "future_oracle_action": "route_b",
+    "action_changed": true,
+    "forecast_waited": false,
+    "departure_delay_h": 0.0
+  },
+  "loss": {
+    "model": {
+      "time_cost_per_hour": 1.0,
+      "burnover_loss": 50.0,
+      "near_miss_penalty": 0.0,
+      "near_miss_margin": 0.0,
+      "name": "route_choice_loss",
+      "loss_ratio": 50.0
+    },
+    "j_baseline": 1.1121320343559642,
+    "j_forecast": 51.0002039759017,
+    "j_future_oracle": 1.1121320343559642
+  },
+  "decision_value": {
+    "delta_j": -49.88807194154573,
+    "future_oracle_value": 0.0,
+    "value_fraction": null,
+    "value_fraction_is_undefined": true
+  },
+  "expected": {
+    "baseline_action": "route_b",
+    "forecast_aware_action": "route_a",
+    "delta_sign": -1,
+    "value_fraction": null
+  },
+  "hand_derivation": "Same nominal world. The -17 deg arm moves the wedge to [-42, +18] deg.\nRoute A's minimum bearing is 18.43 deg, which is now OUTSIDE the upper edge at\n+18 deg -- by 0.43 deg. Every point of route A therefore has arrival time +inf\nin the forecast, the forecast predicts route A clear, and it selects route A.\nIn truth route A is overrun: protective-action failure.\nMagnitude comparison with case 1: 17 < 18. CSI is HIGHER (0.65 vs 0.57) because\nrotating away from the assets produces fewer false-alarm cells on this grid.\nFast-world arm: spread 7 km/h brings the observed burn within the 1.5 km trigger\nradius, so the forecast-free baseline selects route B unaided. The forecast then\nmoves it to the overrun route, and Delta J is about -50 h.",
+  "expected_interpretation": "A smaller heading error with BETTER conventional skill produced a worse decision, and in the faster world a strictly harmful one. Establishes that conventional skill does not uniquely determine decision value. The specific 0.43-degree geometric margin is a property of the constructed geometry and carries no operational meaning.",
+  "claim": "A -17 degree heading error -- one degree SMALLER in magnitude than Case 1's, and scoring BETTER on CSI (0.65 vs 0.57) and on FAR (0.10 vs 0.30) -- rotates the wedge boundary just off route A. The forecast now predicts route A safe, the decision flips to the exposed route, and every hour of value the forecast could have delivered is lost (value fraction 1.00 -> 0.00). In the faster world, where the forecast-free trigger would have picked correctly on its own, the same error makes the forecast strictly harmful: Delta J is about -50 hours."
+}

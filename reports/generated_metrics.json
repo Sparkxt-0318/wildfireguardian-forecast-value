@@ -1,0 +1,20 @@
+{
+  "generated_at_utc": "2026-09-20T02:53:22+00:00",
+  "package_version": "0.1.0",
+  "tests_collected": 434,
+  "tests_marked_slow": 4,
+  "hand_solvable_examples": 13,
+  "structural_invariants": 6,
+  "frozen_benchmark_fixtures": 7,
+  "degradation_operators": 6,
+  "documented_assumptions": 15,
+  "documented_failure_modes": 15,
+  "documented_decisions": 17,
+  "benchmark_cases": 4,
+  "benchmark_case_arms": 7,
+  "notes": [
+    "`tests collected` is what `pytest --collect-only -q` reports at the repository root; `tests marked slow` is the subset carrying the `slow` marker (deselect with `-m 'not slow'`).",
+    "`degradation operators` counts the operators in the default `standard_pipeline()`, not every operator the package defines.",
+    "All benchmark case results are CONSTRUCTED_BENCHMARK, not EMPIRICAL_RESULT -- see `docs/CURRENT_RESULT_STATUS.md`."
+  ]
+}

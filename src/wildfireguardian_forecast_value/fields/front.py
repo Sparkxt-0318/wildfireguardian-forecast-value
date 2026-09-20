@@ -311,8 +311,9 @@ def known_at(state: FireState, information_time: float) -> FireState:
     semantics; the *availability* half lives in
     :mod:`~wildfireguardian_forecast_value.degradation.latency`.
 
-    A forecast that retains such a source is clairvoyant, and
-    :func:`~wildfireguardian_forecast_value.validation.invariants.check_no_clairvoyance`
+    A forecast that retains such a source is a ``FUTURE_ORACLE`` rather than a
+    forecast (:mod:`wildfireguardian_forecast_value.forecast_classes`), and
+    :func:`~wildfireguardian_forecast_value.validation.invariants.check_conditional_on_information_time`
     exists to catch that.
     """
     return FireState(tuple(s for s in state.sources if s.ignition_time <= float(information_time)))

@@ -2,15 +2,22 @@
 
 For one world ``omega`` the package computes three losses:
 
-    J_base(omega)   = J(a_base(omega), omega)      forecast-free policy
-    J_fc(omega)     = J(a_fc(omega),   omega)      forecast-informed policy
-    J_clair(omega)  = J(a*(omega),     omega)      best action in hindsight
+    J_base(omega)    = J(a_base(omega),   omega)   forecast-free policy
+    J_fc(omega)      = J(a_fc(omega),     omega)   forecast-informed policy
+    J_oracle(omega)  = J(a*(omega),       omega)   best action in hindsight
 
 and reports
 
-    Delta J(omega)  = J_base(omega) - J_fc(omega)          (>0: forecast helped)
-    VPI(omega)      = J_base(omega) - J_clair(omega)       (value of perfect info)
-    fraction(omega) = Delta J / VPI                        (when VPI > 0)
+    Delta J(omega)  = J_base(omega) - J_fc(omega)      (>0: forecast helped)
+    FOV(omega)      = J_base(omega) - J_oracle(omega)  (future-oracle value)
+    fraction(omega) = Delta J / FOV                    (when FOV > 0)
+
+``FOV`` is the **future-oracle value**: what it would be worth to know the
+realised world, spot ignitions after the information time included.  It is
+deliberately not called "the value of perfect information", because "perfect"
+is ambiguous between that and an error-free estimate of the *present*, which
+is a strictly weaker and much more nearly achievable object.  See
+:mod:`wildfireguardian_forecast_value.forecast_classes`.
 
 **Paired worlds.**  Both policies are run against the *same* realisation --
 same fire, same receptors, same departure schedule.  The only thing that
@@ -22,9 +29,9 @@ of the paired difference ``Delta J``, never of ``J_base`` and ``J_fc``
 separately.
 
 **The fraction, not just the difference.**  ``Delta J = 0.3 hours`` is
-meaningless without knowing whether perfect information was worth 0.31 hours
-or 31.  ``fraction`` is reported wherever ``VPI > 0``, and is ``nan`` where the
-baseline is already optimal -- a world where perfect information is worth
+meaningless without knowing whether a future oracle was worth 0.31 hours or
+31.  ``fraction`` is reported wherever ``FOV > 0``, and is ``nan`` where the
+baseline is already optimal -- a world where even a future oracle is worth
 nothing is a world that says nothing about a forecast, and averaging a 0/0
 into the headline as "0% of value realised" would be a lie about a world that
 never had an opinion.
@@ -50,13 +57,14 @@ from wildfireguardian_forecast_value.degradation.latency import (
     make_release,
 )
 from wildfireguardian_forecast_value.fields.front import FireState
+from wildfireguardian_forecast_value.forecast_classes import classify_release
 from wildfireguardian_forecast_value.skill_metrics.categorical import categorical_scores
 from wildfireguardian_forecast_value.skill_metrics.continuous import (
     angular_error,
     arrival_time_metrics,
 )
 from wildfireguardian_forecast_value.synthetic_decisions.policies import (
-    ClairvoyantPolicy,
+    FutureOraclePolicy,
     ForecastPolicy,
     Policy,
     ProximityTriggerPolicy,
@@ -78,15 +86,17 @@ class WorldResult:
     world_id: int
     baseline_action: str
     forecast_action: str
-    clairvoyant_action: str
+    future_oracle_action: str
     j_baseline: float
     j_forecast: float
-    j_clairvoyant: float
+    j_future_oracle: float
     delta_j: float
-    vpi: float
+    future_oracle_value: float
     value_fraction: float
     action_changed: bool
     forecast_available: bool
+    #: Which of the four information classes the evaluated forecast belongs to.
+    forecast_class: str
     #: True when the forecast policy held the order waiting for a late release.
     forecast_waited: bool
     #: Hours by which the forecast policy delayed departures while waiting.
@@ -103,6 +113,21 @@ class WorldResult:
     skill: dict = field(default_factory=dict)
     params: dict = field(default_factory=dict)
 
+    @property
+    def vpi(self) -> float:
+        """Deprecated alias for :attr:`future_oracle_value`.
+
+        Kept because "value of perfect information" is the standard name in
+        decision analysis; this package avoids it because "perfect" is
+        ambiguous here (``forecast_classes``).
+        """
+        return self.future_oracle_value
+
+    @property
+    def clairvoyant_action(self) -> str:
+        """Deprecated alias for :attr:`future_oracle_action`."""
+        return self.future_oracle_action
+
     def as_row(self) -> dict:
         d = {k: v for k, v in asdict(self).items() if k not in ("receptor_delta", "skill", "params")}
         d.update({f"skill_{k}": v for k, v in self.skill.items()})
@@ -112,7 +137,7 @@ class WorldResult:
 
 
 def default_policies(scenario, max_wait: float = 0.0) -> tuple[Policy, Policy, Policy]:
-    """``(baseline, forecast, clairvoyant)`` for a toy scenario.
+    """``(baseline, forecast, future_oracle)`` for a toy scenario.
 
     ``max_wait`` is how long the forecast-informed decision maker will hold the
     evacuation order for a release that has not landed.  It defaults to ``0``
@@ -129,7 +154,22 @@ def default_policies(scenario, max_wait: float = 0.0) -> tuple[Policy, Policy, P
     )
     forecast = ForecastPolicy(fallback=baseline, tie_break=(scenario.preferred_action,),
                               max_wait=float(max_wait))
-    return baseline, forecast, ClairvoyantPolicy(tie_break=(scenario.preferred_action,))
+    return baseline, forecast, FutureOraclePolicy(tie_break=(scenario.preferred_action,))
+
+
+def _is_degraded(pipeline, params) -> bool | None:
+    """Whether ``params`` actually moves the pipeline off its identity point.
+
+    ``{"eps_theta": 0.0}`` is not a degradation, and labelling it one would put
+    a ``DEGRADED_FORECAST`` tag on a forecast that is bit-for-bit a
+    present-state oracle.
+    """
+    if pipeline is None:
+        return False
+    if not params:
+        return False
+    identity = pipeline.identity_params()
+    return any(float(v) != float(identity.get(k, v)) for k, v in params.items())
 
 
 def _forecast_skill(scenario, truth: FireState, forecast: FireState, horizon: float) -> dict:
@@ -223,9 +263,9 @@ def evaluate_world(
     j_fc = float(np.mean(realised[k_fc]))
     j_clair = float(np.mean(realised[k_clair]))
 
-    vpi = j_base - j_clair
+    fov = j_base - j_clair
     delta = j_base - j_fc
-    frac = float(delta / vpi) if vpi > 1e-12 else float("nan")
+    frac = float(delta / fov) if fov > 1e-12 else float("nan")
 
     base_losses, fc_losses = realised[k_base], realised[k_fc]
 
@@ -243,14 +283,15 @@ def evaluate_world(
         world_id=world.world_id,
         baseline_action=a_base,
         forecast_action=a_fc,
-        clairvoyant_action=a_clair,
+        future_oracle_action=a_clair,
         j_baseline=float(j_base),
         j_forecast=float(j_fc),
-        j_clairvoyant=float(j_clair),
+        j_future_oracle=float(j_clair),
         delta_j=float(delta),
-        vpi=float(vpi),
+        future_oracle_value=float(fov),
         value_fraction=frac,
         action_changed=bool(a_base != a_fc),
+        forecast_class=str(classify_release(release, world.truth, degraded=_is_degraded(pipeline, params))),
         forecast_available=bool(used is not None),
         forecast_waited=bool(d_fc.waited),
         departure_delay=float(d_fc.departure_delay),

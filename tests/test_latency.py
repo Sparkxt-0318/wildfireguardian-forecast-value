@@ -14,10 +14,11 @@ from wildfireguardian_forecast_value.degradation.latency import (
     make_release,
 )
 from wildfireguardian_forecast_value.fields.front import FireState
+from wildfireguardian_forecast_value.forecast_classes import ForecastClass, classify_release
 from wildfireguardian_forecast_value.validation.invariants import (
     InvariantError,
+    check_conditional_on_information_time,
     check_latency_semantics,
-    check_no_clairvoyance,
 )
 
 
@@ -75,11 +76,11 @@ class TestStream:
             issue_times(0.0, 0.0, 3)
 
 
-class TestNoClairvoyance:
+class TestConditionalOnInformationTime:
     def test_make_release_drops_unknowable_sources(self, two_source_state):
         r = make_release(two_source_state, information_time=0.5, latency=0.1)
         assert r.state.labels == ("main",)
-        check_no_clairvoyance(r)
+        check_conditional_on_information_time(r)
 
     def test_restriction_happens_before_degradation(self, two_source_state):
         """Order matters: restrict, then degrade -- never the other way round."""
@@ -87,16 +88,25 @@ class TestNoClairvoyance:
         r = make_release(two_source_state, 0.5, 0.0, pipe, {"spot_delay": 0.0})
         assert "spot1" not in r.state.labels
 
-    def test_a_hand_built_clairvoyant_release_is_caught(self, two_source_state):
+    def test_a_hand_built_future_oracle_release_is_caught(self, two_source_state):
         bad = ForecastRelease(two_source_state, information_time=0.5, latency=0.0)
-        with pytest.raises(InvariantError, match="clairvoyant"):
-            check_no_clairvoyance(bad)
+        assert classify_release(bad) is ForecastClass.FUTURE_ORACLE
+        with pytest.raises(InvariantError, match="FUTURE_ORACLE"):
+            check_conditional_on_information_time(bad)
 
     def test_opting_out_is_possible_but_explicit(self, two_source_state):
-        r = make_release(two_source_state, 0.5, 0.0, enforce_no_clairvoyance=False)
+        """The escape hatch exists so the invariant itself can be tested."""
+        r = make_release(two_source_state, 0.5, 0.0,
+                         enforce_conditional_on_information_time=False)
         assert "spot1" in r.state.labels
+        assert classify_release(r) is ForecastClass.FUTURE_ORACLE
         with pytest.raises(InvariantError):
-            check_no_clairvoyance(r)
+            check_conditional_on_information_time(r)
+
+    def test_a_conditional_release_is_classified_as_a_present_state_oracle(
+            self, two_source_state):
+        r = make_release(two_source_state, information_time=0.5, latency=0.1)
+        assert classify_release(r, two_source_state) is ForecastClass.PRESENT_STATE_ORACLE
 
 
 class TestLatencySpec:

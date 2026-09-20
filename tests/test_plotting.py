@@ -90,3 +90,40 @@ class TestFigures:
         plot_skill_value_scatter(np.linspace(0.3, 0.9, 5), np.full(5, 2.0),
                                  path=str(tmp_path / "s2.png"))
         assert (tmp_path / "s2.png").exists()
+
+
+class TestBenchmarkProvenanceOnFigures:
+    """A figure outlives the document that qualifies it, so it carries its own."""
+
+    def _texts(self, fig):
+        return [t.get_text() for t in fig.texts]
+
+    def test_frontier_figure_is_stamped(self):
+        from wildfireguardian_forecast_value.plotting.style import BENCHMARK_BANNER
+        fig = plot_frontier(_grid(), None)
+        joined = " ".join(self._texts(fig))
+        assert BENCHMARK_BANNER in joined
+        assert "NOT operational" in joined
+        matplotlib.pyplot.close(fig)
+
+    def test_scenario_map_is_stamped(self, scenario):
+        from wildfireguardian_forecast_value.plotting.style import BENCHMARK_BANNER
+        fig = plot_scenario_map(scenario, scenario.sample_world(0, 1), times=(1.0,))
+        assert BENCHMARK_BANNER in " ".join(self._texts(fig))
+        matplotlib.pyplot.close(fig)
+
+    def test_case_comparison_is_stamped(self):
+        from wildfireguardian_forecast_value.plotting.style import BENCHMARK_BANNER
+        fig = plot_case_comparison([("a", 0.9, 1.0), ("b", 0.4, 0.0)])
+        assert BENCHMARK_BANNER in " ".join(self._texts(fig))
+        matplotlib.pyplot.close(fig)
+
+    def test_skill_value_scatter_is_stamped(self):
+        from wildfireguardian_forecast_value.plotting.style import BENCHMARK_BANNER
+        fig = plot_skill_value_scatter(np.linspace(0.3, 0.9, 6), np.linspace(-3, 6, 6))
+        assert BENCHMARK_BANNER in " ".join(self._texts(fig))
+        matplotlib.pyplot.close(fig)
+
+    def test_the_banner_text_is_the_required_wording(self):
+        from wildfireguardian_forecast_value.plotting.style import BENCHMARK_BANNER
+        assert BENCHMARK_BANNER == "CONSTRUCTED SYNTHETIC BENCHMARK"

@@ -10,10 +10,17 @@ must evacuate it):
 | `J(a, omega)` | downstream loss of action `a` | smaller is better |
 | `J_base` | `J(a_baseline(omega), omega)` | what happens with no forecast |
 | `J_fc` | `J(a_forecast(omega), omega)` | what happens acting on the forecast |
-| `J_clair` | `J(a*(omega), omega)` | best action in hindsight |
+| `J_oracle` | `J(a*(omega), omega)` | best action in hindsight (**future oracle**) |
 | **`Delta J`** | `J_base - J_fc` | **decision value**; `> 0` means the forecast helped |
-| `VPI` | `J_base - J_clair` | value of perfect information |
-| `fraction` | `Delta J / VPI` | share of achievable value realised |
+| `FOV` | `J_base - J_oracle` | **future-oracle value**: what knowing the realised world would be worth |
+| `fraction` | `Delta J / FOV` | share of achievable value realised |
+
+"Perfect forecast" appears nowhere in this repository. It is ambiguous between
+an error-free estimate of the **present** and an oracle that knows the
+realised **future**, and those have different decision values. The four
+explicit classes are in `forecast_classes.py`: `PRESENT_STATE_ORACLE`,
+`CONDITIONAL_FORECAST`, `DEGRADED_FORECAST`, `FUTURE_ORACLE`. Only the last is
+an upper bound, and no forecast system can approach it.
 
 `J` is reported in **hours of equivalent delay**: travel time enters directly
 and a burnover enters as `burnover_loss` hours. Nothing here is money.
@@ -30,10 +37,10 @@ downstream is a statistic of the paired difference, never of `J_base` and
 
 ### Why the fraction, not just the difference
 
-`Delta J = 0.3 hours` is meaningless without knowing whether perfect
-information was worth 0.31 hours or 31. The fraction is reported wherever
-`VPI > 0` and is `nan` where the baseline was already optimal. A world in
-which perfect information is worth nothing says nothing about a forecast, and
+`Delta J = 0.3 hours` is meaningless without knowing whether a future oracle
+was worth 0.31 hours or 31. The fraction is reported wherever
+`FOV > 0` and is `nan` where the baseline was already optimal. A world in
+which even a future oracle is worth nothing says nothing about a forecast, and
 averaging that `0/0` into the headline as "0% of value realised" would be a
 lie about a world that never had an opinion.
 
@@ -100,6 +107,11 @@ effective parameter**, the loss ratio `L / c_t`, not two.
 Deterministic, one world each, asserted in `tests/test_cases.py`. Run them
 with `wg-forecast-value cases`.
 
+> Everything in this section is `CONSTRUCTED_BENCHMARK`
+> (`CURRENT_RESULT_STATUS.md`). The heading offsets, the fire speed and the
+> latency were selected to exhibit the phenomena; `PARAMETER_PROVENANCE.md`
+> records which and how.
+
 All four use the same nominal world: ignition at the origin, heading `+5 deg`,
 spread 6 km/h, 30-degree half-angle, decision at `t = 1 h`. In that world route
 A is overrun for 29 of 40 receptors, route B is safe, the trigger does not
@@ -107,11 +119,13 @@ fire, and so the baseline is **wrong**: `VPI = 36.1 h`.
 
 ### Case 1 — prediction metrics move, the action does not
 
+*Arm classes: `PRESENT_STATE_ORACLE` (reference) and `DEGRADED_FORECAST`.*
+
 A `+18 deg` heading error. Footprint CSI falls `1.00 -> 0.57`; the false-alarm
 ratio rises `0.00 -> 0.30`; arrival-time RMSE stays at **exactly zero**,
 because a pure rotation does not change the distance to any cell that both
 fields burn. The selected action is unchanged, and the decision value is
-identical to a perfect forecast's.
+identical to the present-state-oracle arm's.
 
 *Error that lands away from the decision boundary is invisible to the
 decision — and RMSE cannot see this error at all.*
@@ -141,8 +155,8 @@ correct protective action, realising 100% of the available value.
 
 ### Case 4 — the more accurate forecast is worth less, because it is late
 
-Two forecasts of the same world. The first is perfect (RMSE 0, CSI 1.00) with
-0.5 h of latency, so at the decision time it does not exist: the decision maker
+Two forecasts of the same world. The first is a `PRESENT_STATE_ORACLE`
+(RMSE 0, CSI 1.00) with 0.5 h of latency, so at the decision time it does not exist: the decision maker
 falls back to the trigger and realises **zero** value. The second is markedly
 worse (CSI 0.46) but arrives in time and realises **all** of it.
 
@@ -153,7 +167,7 @@ can.*
 
 | forecast | CSI | value realised |
 |---|---|---|
-| Case 4, accurate but late | **1.00** | **0%** |
+| Case 4, accurate but late (`PRESENT_STATE_ORACLE`) | **1.00** | **0%** |
 | Case 2, `-17 deg` (fast world) | 0.65 | harmful (`Delta J ~ -50 h`) |
 | Case 2, `-17 deg` | 0.65 | 0% |
 | Case 1, `+18 deg` | 0.57 | **100%** |
@@ -207,12 +221,19 @@ are kept in `experiments/manifests/`.
   resamples are drawn faded. There the frontier *exists* only sometimes, and
   the band is not the whole uncertainty.
 
-The asymmetry is the finding. Positive heading errors are nearly free — the
-frontier is flat at about 1.32 h from `0 deg` all the way to `+30 deg`. Going
-the other way it collapses: 1.06 h at `-11 deg`, 0.48 h at `-15 deg`, and at
-`-19 deg` and beyond there is no latency at which the forecast beats the
-trigger at all. A summary reporting `|eps_theta|` would have averaged those
-two halves together and destroyed the finding.
+The asymmetry in **sign** is the finding. Positive heading errors are nearly
+free in this construction, while sufficiently negative ones make the forecast
+worse than the trigger at every latency. A summary reporting `|eps_theta|`
+would have averaged the two halves together and destroyed it.
+
+The **axis values are constructed, not measured.** The flat section near
+1.32 h, the 0.48 h crossing at `-15 deg`, and the `-19 deg` point beyond which
+no break-even exists are arithmetic on a route corner at bearing 18.43 deg, a
+chosen 30 deg wedge half-angle, a 1.6 h waiting window and a robust route made
+cuttable at about 0.95 h of delay. See `PARAMETER_PROVENANCE.md`. **None of
+them is a requirement on any real forecast system**, and
+`CURRENT_RESULT_STATUS.md` lists them as values that must not be quoted
+operationally.
 
 ## Skill against value, directly
 

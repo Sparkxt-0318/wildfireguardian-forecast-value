@@ -1,4 +1,4 @@
-"""The synthetic decision laboratory: worlds, the toy scenario, and the four cases.
+r"""The synthetic decision laboratory: worlds, the toy scenario, and the four cases.
 
 Scenario geometry (all coordinates in km, ``+x`` east, ``+y`` north)::
 
@@ -32,8 +32,8 @@ route too.  That is the mechanism by which latency costs something
 The numbers are tuned so that under the nominal world the safety margin on
 route A is a fraction of an hour either side of zero.  That is deliberate:
 the interesting physics of forecast *value* lives near the margin, and a
-scenario where route A is obviously safe or obviously fatal has no decision in
-it to change.  It also means the scenario is **not** a claim about real
+scenario where route A is always clear or always overrun has no decision in it
+to change.  It also means the scenario is **not** a claim about real
 wildfire evacuation; it is a fixture chosen to exercise the machinery
 (``docs/SCOPE.md``).
 
@@ -318,6 +318,10 @@ class CaseArm:
     degradation_params: dict
     information_time: float
     latency: float
+    #: Which of the four information classes this arm's forecast belongs to
+    #: (:mod:`wildfireguardian_forecast_value.forecast_classes`).  Stated
+    #: rather than inferred, so that an arm cannot quietly change class.
+    forecast_class: str
     expected_forecast_action: str
     expected_baseline_action: str
     #: Sign of ``Delta J = J_baseline - J_forecast``: +1 better, 0 equal, -1 worse.
@@ -328,6 +332,7 @@ class CaseArm:
     def to_dict(self) -> dict:
         return {
             "label": self.label,
+            "forecast_class": self.forecast_class,
             "world_params": {k: (list(v) if isinstance(v, tuple) else v)
                              for k, v in self.world_params.items()},
             "degradation_params": dict(self.degradation_params),
@@ -408,14 +413,15 @@ def case_specs() -> dict[str, CaseSpec]:
                 "A +18 degree heading error degrades footprint skill substantially "
                 "(CSI 1.00 -> 0.57, FAR 0.00 -> 0.30) while leaving arrival-time RMSE "
                 "at zero on the cells both fields burn. The selected action is "
-                "unchanged and the decision value is identical to that of a perfect "
-                "forecast. Error that lands away from the decision boundary is "
-                "invisible to the decision."
+                "unchanged and the decision value is identical to that of the "
+                "PRESENT_STATE_ORACLE arm. Error that lands away from the decision "
+                "boundary is invisible to the decision."
             ),
             arms=(
-                CaseArm("perfect", dict(_NOMINAL), {}, 1.0, 0.0, "route_b", "route_a", +1, 1.0),
+                CaseArm("present_state_oracle", dict(_NOMINAL), {}, 1.0, 0.0,
+                        "PRESENT_STATE_ORACLE", "route_b", "route_a", +1, 1.0),
                 CaseArm("heading_+18deg", dict(_NOMINAL), {"eps_theta": float(d(18.0))},
-                        1.0, 0.0, "route_b", "route_a", +1, 1.0),
+                        1.0, 0.0, "DEGRADED_FORECAST", "route_b", "route_a", +1, 1.0),
             ),
         ),
         "case_2": CaseSpec(
@@ -434,9 +440,9 @@ def case_specs() -> dict[str, CaseSpec]:
             ),
             arms=(
                 CaseArm("heading_-17deg", dict(_NOMINAL), {"eps_theta": float(d(-17.0))},
-                        1.0, 0.0, "route_a", "route_a", 0, 0.0),
+                        1.0, 0.0, "DEGRADED_FORECAST", "route_a", "route_a", 0, 0.0),
                 CaseArm("heading_-17deg_fast_world", dict(_FAST), {"eps_theta": float(d(-17.0))},
-                        1.0, 0.0, "route_a", "route_b", -1, float("nan")),
+                        1.0, 0.0, "DEGRADED_FORECAST", "route_a", "route_b", -1, float("nan")),
             ),
         ),
         "case_3": CaseSpec(
@@ -453,14 +459,14 @@ def case_specs() -> dict[str, CaseSpec]:
                 CaseArm("poor_but_decisive", dict(_NOMINAL),
                         {"eps_r": 0.60, "disp_magnitude": 3.0, "disp_heading": float(np.pi),
                          "eps_theta": float(d(10.0))},
-                        1.0, 0.0, "route_b", "route_a", +1, 1.0),
+                        1.0, 0.0, "DEGRADED_FORECAST", "route_b", "route_a", +1, 1.0),
             ),
         ),
         "case_4": CaseSpec(
             key="case_4",
             title="The more accurate forecast is worth less, because it is late",
             claim=(
-                "Two forecasts of the same world. The first is perfect (RMSE 0, CSI "
+                "Two forecasts of the same world. The first is a PRESENT_STATE_ORACLE (RMSE 0, CSI "
                 "1.00) but has 0.5 h of latency, so at the decision time it does not "
                 "exist: the decision maker falls back to the trigger and realises zero "
                 "value. The second is markedly worse (CSI 0.46) but arrives in time, "
@@ -469,10 +475,10 @@ def case_specs() -> dict[str, CaseSpec]:
             ),
             arms=(
                 CaseArm("accurate_late", dict(_NOMINAL), {}, 1.0, 0.5,
-                        "route_a", "route_a", 0, 0.0),
+                        "PRESENT_STATE_ORACLE", "route_a", "route_a", 0, 0.0),
                 CaseArm("degraded_timely", dict(_NOMINAL),
                         {"eps_r": 0.35, "eps_theta": float(d(9.0))}, 1.0, 0.0,
-                        "route_b", "route_a", +1, 1.0),
+                        "DEGRADED_FORECAST", "route_b", "route_a", +1, 1.0),
             ),
         ),
     }

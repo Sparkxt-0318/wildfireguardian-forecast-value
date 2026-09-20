@@ -166,7 +166,7 @@ def make_release(
     pipeline=None,
     params=None,
     label: str = "forecast",
-    enforce_no_clairvoyance: bool = True,
+    enforce_conditional_on_information_time: bool = True,
 ) -> ForecastRelease:
     """Build a release from truth: restrict to what is knowable, then degrade.
 
@@ -174,8 +174,17 @@ def make_release(
     would let a degradation operator move an unknowable source into the
     forecast; restricting first makes "the forecast could not have known"
     structural rather than a property of the operator chain.
+
+    With ``enforce_conditional_on_information_time=False`` the result is a
+    ``FUTURE_ORACLE`` (see
+    :mod:`wildfireguardian_forecast_value.forecast_classes`), not a forecast,
+    and
+    :func:`...validation.invariants.check_conditional_on_information_time`
+    will reject it.  The escape hatch exists so that the invariant itself can
+    be tested.
     """
-    base = known_at(truth, information_time) if enforce_no_clairvoyance else truth
+    base = (known_at(truth, information_time)
+            if enforce_conditional_on_information_time else truth)
     state = pipeline.apply(base, params) if pipeline is not None else base
     return ForecastRelease(state, information_time, latency, label)
 

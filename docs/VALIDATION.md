@@ -104,10 +104,10 @@ Run by `wg-forecast-value validate` and before every CLI study.
 | Check | What it prevents |
 |---|---|
 | `check_identity_degradation` | An operator with no exact identity point, so "no degradation" is not a point in the sweep. |
-| `check_no_clairvoyance` | A release containing a source that ignites after its information time. The most attractive bug here, because it flatters the forecast in exactly the worlds where being good matters most. |
+| `check_conditional_on_information_time` | A release containing a source that ignites after its information time — a `FUTURE_ORACLE` masquerading as a forecast. The most attractive bug here, because it flatters the forecast in exactly the worlds where being good matters most. |
 | `check_latency_semantics` | A broken availability step, or an information age smaller than the latency. |
 | `check_baseline_is_forecast_free` | A "baseline" that changes its decision when the forecast stream is emptied — i.e. one that is secretly a forecast, making `Delta J` measure the wrong thing. |
-| `check_no_oracle_access` | A candidate policy reading `DecisionContext.truth_state`. Re-runs every non-clairvoyant policy with the slot emptied and asserts the decision is unchanged. |
+| `check_no_oracle_access` | A candidate policy reading `DecisionContext.truth_state`. Re-runs every non-oracle policy with the slot emptied and asserts the decision is unchanged. |
 | `check_pairing` | Two arms of a comparison covering different worlds. |
 
 These raise rather than warn: a study that has violated one is producing
@@ -122,7 +122,7 @@ numbers that mean something other than what they are labelled.
 * each case arm selects the documented actions and has the documented sign of
   `Delta J` and value fraction;
 * Case 1's skill falls substantially while its decision value is bit-for-bit
-  identical to a perfect forecast's;
+  identical to the `PRESENT_STATE_ORACLE` arm's;
 * Case 2 scores **better** than Case 1 on both CSI and FAR while realising
   **none** of the value;
 * Case 3 has the worst CSI of any case and realises **all** of the value;

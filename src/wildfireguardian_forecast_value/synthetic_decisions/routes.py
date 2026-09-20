@@ -25,7 +25,7 @@ is recorded in manifests (``docs/ASSUMPTIONS.md``, A-05).
 Ties
 ----
 ``margin <= 0`` counts as overrun: arriving exactly as the fire does is not a
-survival.  Like the latency tie convention this matters only on a measure-zero
+clear passage.  Like the latency tie convention this matters only on a measure-zero
 set, which is exactly the set the frontier lives on (``docs/ASSUMPTIONS.md``, A-07).
 """
 

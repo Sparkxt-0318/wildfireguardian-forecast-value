@@ -18,7 +18,7 @@ from wildfireguardian_forecast_value.degradation.latency import ForecastStream, 
 from wildfireguardian_forecast_value.fields.front import FireSource, FireState
 from wildfireguardian_forecast_value.outcomes import Outcome
 from wildfireguardian_forecast_value.synthetic_decisions.policies import (
-    ClairvoyantPolicy,
+    FutureOraclePolicy,
     FixedActionPolicy,
     ForecastPolicy,
     ProximityTriggerPolicy,
@@ -160,7 +160,7 @@ class TestPolicies:
     def test_clairvoyant_needs_the_oracle(self, scenario):
         w = scenario.sample_world(0, 1)
         with pytest.raises(ValueError, match="truth_state"):
-            ClairvoyantPolicy().decide(self._ctx(scenario, w, truth=False))
+            FutureOraclePolicy().decide(self._ctx(scenario, w, truth=False))
 
     def test_unavailable_forecast_falls_back_exactly(self, scenario, pipeline):
         from wildfireguardian_forecast_value.degradation.latency import make_release
@@ -201,8 +201,8 @@ class TestEvaluateWorld:
             assert len(w.truth) == 1
             r = evaluate_world(no_spots, w, pipeline, {},
                                LatencySpec(no_spots.decision_time, 0.0))
-            assert r.forecast_action == r.clairvoyant_action
-            assert r.delta_j == pytest.approx(r.vpi)
+            assert r.forecast_action == r.future_oracle_action
+            assert r.delta_j == pytest.approx(r.future_oracle_value)
 
     def test_negative_latency_is_not_a_way_to_buy_clairvoyance(self, scenario):
         """There is no configuration in which a forecast sees past its own issue time."""
@@ -210,13 +210,13 @@ class TestEvaluateWorld:
         with pytest.raises(ValueError, match="arrives before it was made"):
             ForecastRelease(FireState(()), information_time=99.0, latency=-98.0)
 
-    def test_an_undegraded_forecast_is_still_not_clairvoyant_about_the_future(
+    def test_an_undegraded_forecast_is_still_not_a_future_oracle(
             self, scenario, pipeline):
         """An un-degraded forecast issued at the decision time can still be beaten.
 
         Not a defect: a spot fire that ignites after the information time is not
-        knowable, so 'zero degradation' is not 'perfect information'. Conflating
-        the two is how a study accidentally reports clairvoyant value as
+        knowable, so a PRESENT_STATE_ORACLE is not a FUTURE_ORACLE. Conflating
+        the two is how a study accidentally reports future-oracle value as
         achievable.
         """
         differed = 0
@@ -226,8 +226,8 @@ class TestEvaluateWorld:
                 continue
             r = evaluate_world(scenario, w, pipeline, {},
                                LatencySpec(scenario.decision_time, 0.0))
-            assert r.delta_j <= r.vpi + 1e-9
-            differed += int(r.forecast_action != r.clairvoyant_action)
+            assert r.delta_j <= r.future_oracle_value + 1e-9
+            differed += int(r.forecast_action != r.future_oracle_action)
         assert differed > 0, "the scenario should contain worlds with unknowable spot fires"
 
     def test_delta_j_never_exceeds_vpi(self, scenario, pipeline):
@@ -235,7 +235,7 @@ class TestEvaluateWorld:
             w = scenario.sample_world(i, 5)
             r = evaluate_world(scenario, w, pipeline, {"eps_theta": 0.25},
                                LatencySpec(0.6, 0.0))
-            assert r.delta_j <= r.vpi + 1e-9
+            assert r.delta_j <= r.future_oracle_value + 1e-9
 
     def test_unavailable_forecast_gives_exactly_zero_value(self, scenario, pipeline):
         w = scenario.sample_world(2, 6)
@@ -251,16 +251,16 @@ class TestEvaluateWorld:
                            compute_skill=False)
         assert set(r.skill) == {"release_used"}
 
-    def test_value_fraction_is_nan_when_perfect_information_is_worth_nothing(
+    def test_value_fraction_is_nan_when_even_a_future_oracle_is_worth_nothing(
             self, scenario, pipeline):
         """0/0 is reported as nan, never as 'realised 0% of the value'."""
         base = ProximityTriggerPolicy("route_a", "route_b", trigger_distance=1e9)
-        pols = (base, ForecastPolicy(fallback=base), ClairvoyantPolicy())
+        pols = (base, ForecastPolicy(fallback=base), FutureOraclePolicy())
         seen_nan = False
         for i in range(30):
             w = scenario.sample_world(i, 8)
             r = evaluate_world(scenario, w, pipeline, {}, LatencySpec(0.6, 0.0), policies=pols)
-            if r.vpi == 0.0:
+            if r.future_oracle_value == 0.0:
                 assert np.isnan(r.value_fraction)
                 seen_nan = True
         assert seen_nan, "an always-robust baseline should be optimal in some worlds"

@@ -8,7 +8,12 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from wildfireguardian_forecast_value.plotting.style import SERIES, TOKENS, apply_axes_style
+from wildfireguardian_forecast_value.plotting.style import (
+    SERIES,
+    TOKENS,
+    add_benchmark_banner,
+    apply_axes_style,
+)
 
 __all__ = ["plot_case_comparison", "plot_skill_value_scatter"]
 
@@ -35,7 +40,7 @@ def plot_case_comparison(rows, path: str | None = None):
     b1 = ax.bar(idx - w / 2 - 0.01, csi, width=w, color=SERIES[0],
                 label="forecast skill (footprint CSI)", zorder=3)
     b2 = ax.bar(idx + w / 2 + 0.01, frac, width=w, color=SERIES[1],
-                label="decision value realised (fraction of perfect information)", zorder=3)
+                label="decision value realised (fraction of future-oracle value)", zorder=3)
 
     for rect, v in zip(b1, csi):
         ax.annotate(f"{v:.2f}", (rect.get_x() + rect.get_width() / 2, v), xytext=(0, 3),
@@ -58,11 +63,12 @@ def plot_case_comparison(rows, path: str | None = None):
                     facecolor=TOKENS["surface"], edgecolor=TOKENS["grid"])
     for t in leg.get_texts():
         t.set_color(TOKENS["text_secondary"])
-    fig.text(0.01, 0.005,
+    fig.text(0.008, 0.072,
              '"n/a" marks a case where the forecast-free trigger was already optimal, '
-             "so perfect information was worth nothing and the fraction is 0/0.",
+             "so even a future oracle was worth nothing and the fraction is 0/0.",
              color=TOKENS["text_muted"], fontsize=8)
-    fig.tight_layout(rect=(0, 0.03, 1, 1))
+    fig.tight_layout(rect=(0, 0.105, 1, 0.965))
+    add_benchmark_banner(fig)
     if path:
         fig.savefig(path, dpi=170, facecolor=TOKENS["surface"])
         plt.close(fig)
@@ -105,7 +111,8 @@ def plot_skill_value_scatter(skill, delta_j, skill_label: str = "footprint CSI",
                     edgecolor=TOKENS["grid"])
     for t in leg.get_texts():
         t.set_color(TOKENS["text_secondary"])
-    fig.tight_layout()
+    fig.tight_layout(rect=(0, 0.075, 1, 0.965))
+    add_benchmark_banner(fig)
     if path:
         fig.savefig(path, dpi=170, facecolor=TOKENS["surface"])
         plt.close(fig)

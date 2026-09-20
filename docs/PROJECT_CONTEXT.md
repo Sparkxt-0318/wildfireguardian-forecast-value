@@ -1,5 +1,13 @@
 # Project context
 
+## Status
+
+**Frozen at v0.1** as the decision-value counterexample and
+experiment-orchestration layer. Every result is `CONSTRUCTED_BENCHMARK`
+([`CURRENT_RESULT_STATUS.md`](CURRENT_RESULT_STATUS.md)); the repository's
+post-freeze job and its explicit non-responsibilities are in
+[`REPOSITORY_ROLE.md`](REPOSITORY_ROLE.md).
+
 ## What this repository is
 
 An experimental-mathematics and statistics workbench for one question:
@@ -46,7 +54,10 @@ independently, which is the repository's whole purpose.
 | `frontiers/` | Sweeping `Delta J` over a parameter grid and extracting the `Delta J = 0` set without assuming monotonicity. |
 | `plotting/` | Figures, with a validated diverging/categorical palette. |
 | `validation/` | Hand-solvable closed-form examples and structural invariants. |
-| `cli/` | `wg-forecast-value`, configuration, manifests, reporting. |
+| `cli/` | `wg-forecast-value`, configuration, manifests, reporting, release metrics. |
+| `interfaces/` | The input contract for external experiment records. Defines; does not integrate. |
+| `forecast_classes.py` | The four information classes, so that "perfect forecast" cannot be written. |
+| `benchmark_fixtures.py` | Freezes and re-checks the constructed benchmark. |
 | `outcomes.py` | `Outcome` lives at the root so physics and valuation need not depend on each other. |
 
 ## Reading order
@@ -57,6 +68,10 @@ independently, which is the repository's whole purpose.
 4. `STATISTICAL_PROTOCOL.md` — the unit of analysis and what the intervals mean.
 5. `ASSUMPTIONS.md` and `FAILURE_MODES.md` — where this is wrong or could mislead.
 6. `VALIDATION.md` — the closed-form checks anyone can redo on paper.
+7. `CURRENT_RESULT_STATUS.md` and `PARAMETER_PROVENANCE.md` — what the results
+   are, and which parameters were tuned to produce them.
+8. `REPOSITORY_ROLE.md` and `EXTERNAL_EXPERIMENT_INTERFACE.md` — where the work
+   goes next.
 
 ## Provenance of every number
 

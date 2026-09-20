@@ -18,7 +18,8 @@ Three failure modes, matching the three ways a spot prediction can be wrong:
     The forecast has the spot but too late: ``t0' = t0 + spot_delay``.
     ``spot_delay >= 0`` is enforced.  A negative value would be a forecast
     that predicts an ignition *before* it happens, which is a different
-    (clairvoyant) failure and is rejected here rather than quietly allowed.
+    failure -- it is future-oracle information -- and is rejected here rather
+    than quietly allowed.
 
 ``SpotDisplacement``
     The forecast has the spot at the wrong place.  Shares the implementation
@@ -89,7 +90,8 @@ class SpotDelay(DegradationOperator):
         delay = float(values["spot_delay"])
         if not np.isfinite(delay) or delay < 0.0:
             raise ValueError(
-                f"spot_delay must be finite and >= 0 (a negative delay is clairvoyance, "
+                f"spot_delay must be finite and >= 0 (a negative delay is future-oracle "
+                f"information, "
                 f"not error); got {delay!r}"
             )
         return source.with_(ignition_time=source.ignition_time + delay)

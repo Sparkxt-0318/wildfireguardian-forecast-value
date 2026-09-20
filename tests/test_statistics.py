@@ -177,7 +177,7 @@ class TestEffectSizes:
         f = np.array([1.0, 0.5, np.nan, np.nan, 0.0])
         s = value_fraction_summary(f, n_boot=200)
         assert s["n_worlds"] == 5
-        assert s["n_worlds_with_positive_vpi"] == 3
+        assert s["n_worlds_with_positive_future_oracle_value"] == 3
         assert s["n_worlds_undecidable"] == 2
         assert s["mean_value_fraction"] == pytest.approx(0.5)
 

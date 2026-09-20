@@ -147,11 +147,11 @@ the decision maker to the policy they had without it. That produces a
 behaviour a penalty cannot: increasing accuracy while increasing latency can
 strictly *decrease* decision value, discontinuously.
 
-**Information time forbids clairvoyance.** A source igniting after `s` is
+**Information time forbids future-oracle leakage.** A source igniting after `s` is
 unknowable, and `make_release` restricts the truth to `known_at(truth, s)`
 *before* degrading it. Restricting afterwards would let an operator move an
 unknowable source into the forecast.
-`validation.invariants.check_no_clairvoyance` catches a release that violates
+`validation.invariants.check_conditional_on_information_time` catches a release that violates
 this.
 
 **Staleness is not latency.** When a release *is* available, what degrades the
@@ -183,7 +183,7 @@ a latent uniform is what lets a missed spot be *correlated* with, say, a
 spread-rate bias. An internal coin flip could not be.
 
 **A negative spot delay is rejected.** A forecast predicting an ignition
-*before* it happens is a different (clairvoyant) failure, not error.
+*before* it happens is future-oracle information, not error.
 
 **All three default to `kind="spot"` sources only**, so "the spot was missed"
 cannot silently delete the main fire.

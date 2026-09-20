@@ -21,11 +21,13 @@ instead.
     where the forecast changed nothing is evidence about the forecast, not a
     missing observation.
 
-``mean_ratio_to_vpi``
-    Mean realised fraction of the value of perfect information, over worlds
-    where perfect information was worth something.  This is the scale-free
+``mean_value_fraction``
+    Mean realised fraction of the **future-oracle value**, over worlds where a
+    future oracle would have been worth something.  This is the scale-free
     number a decision maker actually wants: "this forecast captures 62% of
-    what a perfect one would be worth".
+    what knowing the realised world would be worth".  Not called "fraction of
+    perfect information" -- see
+    :mod:`wildfireguardian_forecast_value.forecast_classes`.
 
 All three come with cluster-bootstrap intervals.
 """
@@ -129,10 +131,10 @@ def value_fraction_summary(
     confidence: float = 0.95,
     seed: int = 0,
 ) -> dict:
-    """Mean realised fraction of VPI, over worlds where VPI was positive.
+    """Mean realised fraction of the future-oracle value, where that is positive.
 
-    Worlds with ``nan`` (perfect information worth nothing) are excluded from
-    the mean and **counted separately**.  A study in which most worlds are
+    Worlds with ``nan`` (even a future oracle was worth nothing there) are
+    excluded from the mean and **counted separately**.  A study in which most worlds are
     excluded is a study whose scenario rarely poses a decision, and the count
     is what tells you so.
     """
@@ -140,7 +142,7 @@ def value_fraction_summary(
     usable = f[np.isfinite(f)]
     out = {
         "n_worlds": int(f.size),
-        "n_worlds_with_positive_vpi": int(usable.size),
+        "n_worlds_with_positive_future_oracle_value": int(usable.size),
         "n_worlds_undecidable": int(f.size - usable.size),
     }
     if usable.size < 2:

@@ -93,8 +93,8 @@ demonstrates the exploit and shows the miss count exposing it.
 maker**, which is the weakest honest way to use a deterministic forecast. A
 risk-averse or ensemble-based policy would do better with the same forecast.
 
-**Guard.** Documented in `policies.py` and as A-08. The clairvoyant bound
-(`VPI`) is reported alongside so the headroom is visible.
+**Guard.** Documented in `policies.py` and as A-08. The future-oracle bound
+(`future_oracle_value`) is reported alongside so the headroom is visible.
 
 **Check.** Read every `Delta J` as a lower bound, and read `fraction` as "how
 much of the achievable value *this* decision maker captured".
@@ -195,7 +195,7 @@ staleness.
 
 ---
 
-## F-13 — Accidental clairvoyance
+## F-13 — Accidental future-oracle leakage
 
 **Failure.** Building a forecast that contains a spot ignition which had not
 yet happened at the forecast's information time. This is the most attractive
@@ -203,14 +203,14 @@ bug in a study like this, because it makes the forecast look good in exactly
 the worlds where being good matters most.
 
 **Guard.** `make_release` restricts to `known_at(truth, s)` *before*
-degrading; `check_no_clairvoyance` raises on a violating release;
+degrading; `check_conditional_on_information_time` raises on a violating release;
 `DecisionContext.truth_state` defaults to `None` and `check_no_oracle_access`
 re-runs every candidate policy with it removed and asserts the decision is
 unchanged.
 
 **Check.** `wg-forecast-value validate` runs all of these. Note that
-"zero degradation" is therefore **not** "perfect information" — asserted in
-`tests/test_decisions.py::test_an_undegraded_forecast_is_still_not_clairvoyant_about_the_future`.
+a `PRESENT_STATE_ORACLE` is therefore **not** a `FUTURE_ORACLE` — asserted in
+`tests/test_forecast_classes.py::TestTheDistinctionThatMatters`.
 
 ---
 

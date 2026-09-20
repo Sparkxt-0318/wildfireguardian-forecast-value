@@ -20,7 +20,19 @@ from __future__ import annotations
 
 from matplotlib.colors import LinearSegmentedColormap, TwoSlopeNorm
 
-__all__ = ["TOKENS", "SERIES", "diverging_cmap", "symmetric_norm", "apply_axes_style"]
+__all__ = ["TOKENS", "SERIES", "diverging_cmap", "symmetric_norm", "apply_axes_style",
+           "add_benchmark_banner", "BENCHMARK_BANNER", "BENCHMARK_FOOTNOTE"]
+
+#: Stamped on every figure. These are constructed fixtures, and a figure that
+#: travels without its provenance is the most likely way for a synthetic
+#: threshold to be quoted as an operational requirement.
+BENCHMARK_BANNER = "CONSTRUCTED SYNTHETIC BENCHMARK"
+
+BENCHMARK_FOOTNOTE = (
+    "Constructed synthetic benchmark (docs/CURRENT_RESULT_STATUS.md). Axis values are\n"
+    "properties of a geometry built to expose the phenomenon, NOT operational\n"
+    "requirements and NOT a claim about real wildfire forecast performance."
+)
 
 TOKENS = {
     "surface": "#fcfcfb",
@@ -86,3 +98,24 @@ def apply_axes_style(ax, title: str = "", subtitle: str = "",
     if subtitle:
         ax.text(0.0, 1.015, subtitle, transform=ax.transAxes, ha="left", va="bottom",
                 color=TOKENS["text_secondary"], fontsize=9.5)
+
+
+def add_benchmark_banner(fig, footnote: bool = True) -> None:
+    """Stamp a figure as a constructed benchmark.
+
+    Prominent by design.  Every number on these axes is a property of a
+    geometry that was tuned to make a phenomenon visible
+    (``docs/PARAMETER_PROVENANCE.md``).  Figures outlive the documents that
+    qualify them, so the qualification travels on the figure.
+    """
+    fig.text(
+        0.995, 0.987, BENCHMARK_BANNER,
+        ha="right", va="top", fontsize=9, fontweight="bold",
+        color="#7a1f1f",
+        bbox=dict(boxstyle="round,pad=0.42", facecolor="#fbe4e4",
+                  edgecolor="#d03b3b", linewidth=1.0),
+        zorder=1000,
+    )
+    if footnote:
+        fig.text(0.008, 0.004, BENCHMARK_FOOTNOTE, ha="left", va="bottom",
+                 fontsize=7.4, color=TOKENS["text_muted"], linespacing=1.35, zorder=1000)

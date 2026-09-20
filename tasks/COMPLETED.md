@@ -11,12 +11,13 @@ through `DegradationPipeline` with a documented canonical order. Every
 operator has an exact identity point, raises on domain violations, and
 declares which sources it touches. Correlated combination via a Gaussian
 copula with per-channel marginals.
-*Evidence:* `tests/test_degradation.py` (56 tests), hand-checks V1–V4, V7.
+*Evidence:* `tests/test_degradation.py`, hand-checks V1–V4, V7.
 
 ### Latency semantics are explicit
 Three clocks (information time, latency, decision time) as separate fields.
 Availability is a step at `s + δ`, inclusive. Information time structurally
-forbids clairvoyance: `make_release` restricts truth *before* degrading.
+forbids future-oracle leakage: `make_release` restricts truth *before*
+degrading.
 Staleness (`t_d − s`) is reported separately from latency. A decision maker may
 wait, and waiting shifts departures rather than scoring points.
 *Evidence:* `tests/test_latency.py`, hand-checks V5–V6, Case 4.
@@ -25,22 +26,23 @@ wait, and waiting shifts departures rather than scoring points.
 Two-route evacuation tuned so the safety margin on the exposed route sits a
 fraction of an hour either side of zero. Three policy classes: forecast-free
 proximity trigger, plug-in forecast policy with fallback and optional waiting,
-clairvoyant upper bound. Worlds carry staggered receptors, which is what makes
+future-oracle upper bound. Worlds carry staggered receptors, which is what makes
 the clustering problem real rather than illustrative.
 *Evidence:* `tests/test_decisions.py`, `figures/scenario_map.png`.
 
 ### Forecast skill vs decision value is demonstrated
 All four requested cases, deterministic and asserted:
 
-1. `+18°` heading error — CSI `1.00 → 0.57`, FAR `0.00 → 0.30`, arrival-time
-   RMSE exactly 0, **action unchanged, value unchanged**.
+1. `+18°` heading error (`DEGRADED_FORECAST`) — CSI `1.00 → 0.57`, FAR
+   `0.00 → 0.30`, arrival-time RMSE exactly 0, **action unchanged, value
+   unchanged** relative to the `PRESENT_STATE_ORACLE` arm.
 2. `−17°` heading error — *smaller* in magnitude, *better* CSI and FAR, and it
    flips the decision; value `100% → 0%`, and `ΔJ ≈ −50 h` in a faster world
    where the trigger would have been right on its own.
 3. 60% fast, 3 km displaced, 10° off — **worst CSI of any case (0.40)**, full
    value realised.
-4. Perfect forecast 0.5 h late — CSI 1.00, **value 0%**; a CSI-0.46 forecast
-   that arrives on time realises 100%.
+4. `PRESENT_STATE_ORACLE` 0.5 h late — CSI 1.00, **value 0%**; a CSI-0.46
+   degraded forecast that arrives on time realises 100%.
 
 Ranked by CSI, the value column is **exactly inverted**.
 *Evidence:* `tests/test_cases.py`, `figures/case_comparison.png`,
@@ -70,7 +72,8 @@ intervals do **not** cover.
 
 ### Tests include hand-checkable examples
 13 closed-form examples with full derivations, runnable as
-`wg-forecast-value validate -v`. 277 tests total.
+`wg-forecast-value validate -v`. Counts are measured, not typed: see
+[`reports/generated_metrics.md`](../reports/generated_metrics.md).
 
 ### Assumptions and failure modes are documented
 A-01…A-15 with consequences, F-01…F-15 with guards and what to check,
@@ -87,10 +90,11 @@ D-01…D-17 with rejected alternatives.
 * **Sign beats magnitude for direction error.** `+18°` is free and `−17°` is
   catastrophic in the same scenario. Any summary reporting `|ε_θ|` destroys
   the finding.
-* **A "perfect" forecast is not clairvoyant.** An un-degraded forecast issued
-  at the decision time still cannot see a spot fire that ignites afterwards.
-  This surfaced as a *failing test* whose assertion was wrong, and it is now
-  asserted in the correct direction.
+* **A `PRESENT_STATE_ORACLE` is not a `FUTURE_ORACLE`.** An un-degraded
+  forecast issued at the decision time still cannot see a spot fire that
+  ignites afterwards. This surfaced as a *failing test* whose assertion was
+  wrong; it is now asserted in the correct direction and the ambiguous phrase
+  "perfect forecast" has been removed from the repository (`forecast_classes.py`).
 * **Route sampling caught a wrong hand-derivation.** The binding point on a
   route crossed by a fire is *not* the point nearest the fire — the receptor
   keeps moving while the fire closes. V8 now carries the calculus.
@@ -99,7 +103,7 @@ D-01…D-17 with rejected alternatives.
   axis a single cliff. The robust route is now cuttable at a delay of ~0.95 h.
 * **The sign of `Delta J` is remarkably insensitive to the loss ratio.**
   Across `L/c_t` from 0.05 to 200 — a 4000-fold range — the sign never
-  changes, though the realised fraction of perfect information collapses from
+  changes, though the realised fraction of the future-oracle value collapses from
   0.92 to 0.30 around `L/c_t ~ 0.12`, where the detour cost and the burnover
   cost become comparable. That is the regime in which the decision is finely
   balanced and a forecast has the least room to help, and it is not where the

@@ -2,6 +2,7 @@
 
 from wildfireguardian_forecast_value.synthetic_decisions.policies import (
     ClairvoyantPolicy,
+    FutureOraclePolicy,
     DecisionContext,
     FixedActionPolicy,
     ForecastPolicy,
@@ -23,7 +24,7 @@ from wildfireguardian_forecast_value.synthetic_decisions.scenarios import (
 __all__ = [
     "Route", "RouteSet", "traverse",
     "DecisionContext", "Policy", "FixedActionPolicy", "ProximityTriggerPolicy",
-    "ForecastPolicy", "ClairvoyantPolicy", "plug_in_expected_loss",
+    "ForecastPolicy", "FutureOraclePolicy", "ClairvoyantPolicy", "plug_in_expected_loss",
     "World", "SpotSpec", "ToyEvacuationScenario", "default_scenario",
     "CaseSpec", "CASES", "case_specs",
 ]

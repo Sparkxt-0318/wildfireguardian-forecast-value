@@ -149,7 +149,11 @@ Validate a new categorical palette rather than eyeballing it.
 
 ## Definition of done for any change
 
-- [ ] `pytest -q` passes (277 tests at time of writing).
+- [ ] `pytest -q` passes. Do **not** write the count into any document;
+      regenerate [`reports/generated_metrics.md`](reports/generated_metrics.md)
+      with `wg-forecast-value release-metrics` instead.
+- [ ] `wg-forecast-value freeze-benchmarks` reports no drift, or the drift is a
+      documented defect fix re-frozen with `--write`.
 - [ ] `wg-forecast-value validate` passes — 13 hand-solvable examples and 5
       structural invariants.
 - [ ] New behaviour has a hand-checkable example or a claim test.

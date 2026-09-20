@@ -12,7 +12,7 @@ wg-forecast-value estimate-frontier experiments/runs/<name>/sweep.parquet
 
 | manifest | what it is for |
 |---|---|
-| `default_study.yaml` | The reference paired world-level study: an undegraded but non-clairvoyant forecast, 200 worlds. Produces the clustering diagnostics quoted in the README. |
+| `default_study.yaml` | The reference paired world-level study: a `PRESENT_STATE_ORACLE` (undegraded, but still conditioned on the information time), 200 worlds. Produces the clustering diagnostics quoted in the README. |
 | `frontier_direction_latency.yaml` | **The primary demonstration.** The (direction error × latency) sweep behind `figures/frontier_direction_latency.png`. |
 | `frontier_short_wait.yaml` | The same sweep with a shorter `max_wait`, which produces **columns with two zero crossings**. Kept as the regression fixture for the non-monotone frontier path (F-10): if the estimator ever starts assuming a single crossing, this is what catches it. |
 | `correlated_error_system.yaml` | Value of a forecast *system* rather than of one error magnitude: a correlated error vector is drawn per world. Direction and rate errors are coupled (both follow a wind error) and a spread-rate bias is correlated with missing a spot fire. |

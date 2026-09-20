@@ -74,7 +74,7 @@ Three effect sizes are reported instead:
 |---|---|
 | `mean Delta J` with a bootstrap CI | the quantity of interest, in the units of `J` |
 | `P(forecast better)` — `P(d>0) + 0.5 P(d=0)` | assumption-free; the right headline for a distribution that is mostly a spike at zero. **Ties are split, never dropped**: a world where the forecast changed nothing is evidence about the forecast, not a missing observation |
-| mean fraction of VPI realised | scale-free and directly interpretable: "captures 92% of what a perfect forecast would be worth" |
+| mean fraction of the future-oracle value realised | scale-free and directly interpretable: "captures 92% of what knowing the realised world would be worth" |
 
 `Cohen's d_z` and Hedges' `g` are also computed and are the most misleading of
 the set here, because `d` is near two-point and its standard deviation is not

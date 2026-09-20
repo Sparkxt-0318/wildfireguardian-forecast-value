@@ -31,8 +31,9 @@ These are different objects and they are not monotonically related:
 * A forecast can be **slightly wrong in exactly the direction that matters**.
   A 17-degree heading error can be invisible to arrival-time RMSE, *improve*
   the false-alarm ratio, and still flip the protective decision to the one
-  that gets people killed.
-* A forecast can be **accurate and unavailable**. A perfect forecast that
+  that ends in protective-action failure -- the route is overrun before the
+  community clears it.
+* A forecast can be **accurate and unavailable**. An error-free estimate that
   lands after the decision has been made has decision value exactly zero, and
   no skill score can see that, because skill scores do not have a clock.
 

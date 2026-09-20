@@ -1,54 +1,71 @@
 # Current
 
-**Status: v0.1 complete.** The definition of done in the brief is met; see
-`COMPLETED.md` for the evidence and `ROADMAP.md` for what comes next.
+**Status: v0.1 FROZEN.**
 
-## Immediate next step
+This repository is closed to new synthetic wildfire worlds. The counterexample
+is complete, classified (`docs/CURRENT_RESULT_STATUS.md`), provenanced
+(`docs/PARAMETER_PROVENANCE.md`) and frozen as immutable fixtures
+(`experiments/benchmark_fixtures/`). The release report is
+`reports/V0_1_FREEZE_REPORT.md`.
 
-**R1 — sequential, revisable decisions** (`ROADMAP.md`). It is the single
-assumption (A-13) whose relaxation would most change the conclusions: with a
-revisable decision, a late forecast is not worth zero, it is worth whatever it
-saves on the next decision, and the whole latency axis of the primary figure
-would change meaning.
+## What happens next, and where
 
-Suggested first move, small enough to be reversible: add a second decision
-point at `t_d + Δ` and let the forecast policy defer. That requires a
-`Decision` that can say "decide again later", and a loss that prices the
-deferral through the same arrival-time arithmetic that prices waiting today.
+The next scientific evidence comes from **outside this repository**:
 
-## Open questions, in priority order
+* **main WildfireGuardian** — empirical Korean-system stress test;
+* **`wildfireguardian-osse`** — independent hidden-world experiment;
+* **`wildfireguardian-evaluation`** — formal statistical inference;
+* **`wildfireguardian-benchmarks`** — general exact semantic reference cases.
 
-1. **Is the hard wedge edge load-bearing for Case 2?** (A-02, R4.) If a smooth
-   front turns the Case 2 cliff into a gradient, the "small error flips the
-   decision" claim needs re-wording — not withdrawing, since the *mechanism*
-   survives, but the word "flips" would be doing work the model no longer
-   supports.
-2. **How much of the measured `Delta J` is an artefact of the plug-in policy?**
-   (A-08, R3.) Everything reported here is a lower bound. The size of the gap
-   is unknown and is a result in itself.
-3. **What does the frontier look like against `log(r̂/r)` instead of `ε_r`?**
-   (F-14.) The asymmetry of the multiplicative parameterisation may be doing
-   visual work that the physics does not.
-4. ~~**Does the sign of `Delta J` survive a change in the loss ratio?**~~
-   **Answered.** Run at `L/c_t` in `{0.05, 0.1, 0.12, 0.15, 0.2, 0.5, 1, 5,
-   10, 50, 200}` on 200 worlds: the sign is positive throughout, a 4000-fold
-   range. Magnitude scales close to linearly above `L/c_t = 5`. The realised
-   *fraction* of VPI dips sharply around `L/c_t ~ 0.12` (to 0.30, from 0.92),
-   which is where the detour cost and the burnover cost become comparable and
-   the decision is genuinely finely balanced — the interesting regime, and the
-   one where a forecast has the least room to help. Still outstanding: the same
-   sweep across the **full frontier grid** rather than at a single forecast
-   setting, which would show whether the frontier's *shape* moves even though
-   its sign does not.
+This repository's job is to ingest records from the first two, align skill with
+downstream outcomes, construct error x latency grids, identify candidate
+break-even regions, and export world-level records to the third. See
+`docs/REPOSITORY_ROLE.md`.
 
-## Known rough edges
+## Work that is in scope here when the inputs exist
 
-* `frontier_short_wait.yaml` produces columns with two zero crossings, which
-  is deliberate — it is the regression fixture for non-monotonicity — but the
-  frontier figure then draws only the first crossing with a marker. A
-  multi-valued frontier deserves a better visual treatment than a marker.
-* The skill-versus-value scatter re-runs a full paired study per point. It is
+1. **Wire up the record reader** to real Source A / Source B outputs. The
+   contract is defined and executable
+   (`docs/EXTERNAL_EXPERIMENT_INTERFACE.md`,
+   `src/.../interfaces/experiment_record.py`); nothing is integrated yet, by
+   instruction.
+2. **Grid construction over ingested records** rather than over synthetic
+   degradation parameters. The axis machinery is agnostic; what changes is
+   where the error coordinates come from.
+3. **Export format for `wildfireguardian-evaluation`**, carrying the pairing
+   structure and `world_id` intact.
+
+## Work that is explicitly NOT in scope here
+
+* A fifth constructed case, or any further synthetic world.
+* Re-tuning the frozen fixtures for anything but a genuine defect.
+* Growing the local statistics package.
+* Any operational interpretation of the benchmark's numeric thresholds.
+
+## Open questions, carried forward
+
+These were live at the freeze and remain worth answering — but with **external
+evidence**, not with more constructed worlds:
+
+1. **How often does the skill/value divergence occur operationally?** The
+   benchmark establishes possibility only. This is Source A's question.
+2. **How large is it when it occurs?** Source B's question: OSSE has the real
+   counterfactual arm that the empirical stress test lacks.
+3. **Is the hard wedge edge load-bearing for the case-2 flip?** (A-02.) A
+   smooth front should turn the cliff into a gradient. If the flip vanishes
+   entirely, the "small error flips the decision" wording needs weakening —
+   the mechanism survives either way. Best answered in OSSE, which has a real
+   spread model.
+4. **How much of the measured value is an artefact of the plug-in policy?**
+   (A-08, F-06.) Every `Delta J` here is a lower bound and the size of the gap
+   is unknown. An ensemble-consuming policy would measure it.
+
+## Known rough edges, recorded not fixed
+
+* The frontier figure draws only the first crossing in a multi-valued column,
+  with a marker. A multi-valued frontier deserves a better visual treatment.
+* The skill-versus-value scatter re-runs a full paired study per point; it is
   the slowest part of `demo` and is trivially parallelisable.
-* `RasterGrid` skill computation dominates `evaluate_world` when skill is on
-  (4.5 ms versus 1.7 ms). Sweeps switch it off, but a coarser skill grid would
-  make it affordable to keep on.
+* Skill rasterisation dominates `evaluate_world` when skill is on (~4.5 ms vs
+  ~1.7 ms). Sweeps switch it off; a coarser skill grid would make it
+  affordable to keep on.

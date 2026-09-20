@@ -45,6 +45,7 @@ __all__ = [
     "FixedActionPolicy",
     "ProximityTriggerPolicy",
     "ForecastPolicy",
+    "FutureOraclePolicy",
     "ClairvoyantPolicy",
     "plug_in_expected_loss",
 ]
@@ -59,7 +60,7 @@ class Decision:
     not suffer a penalty on a score -- they suffer a later departure, and the
     fire keeps spreading while they wait.  That cost is physical, falls out of
     the same arrival-time arithmetic as everything else, and can turn a
-    correct action into a fatal one.  A policy that does not wait returns
+    correct action into a high-loss one.  A policy that does not wait returns
     ``0.0`` and nothing changes.
     """
 
@@ -84,12 +85,12 @@ class DecisionContext:
     loss: object                   # LossModel
     departure_times: np.ndarray    # receptor departure times (absolute hours)
     #: The true fire state.  Present only so that
-    #: :class:`ClairvoyantPolicy` can compute the value-of-perfect-information
-    #: bound.  **No candidate policy may read it.**  It is the last field and
+    #: :class:`FutureOraclePolicy` can compute the future-oracle bound.
+    #: **No candidate policy may read it.**  It is the last field and
     #: defaults to ``None`` so that a context built for ordinary use cannot
     #: leak it, and
     #: :func:`~wildfireguardian_forecast_value.validation.invariants.check_no_oracle_access`
-    #: re-runs every non-clairvoyant policy against a context with this slot
+    #: re-runs every non-oracle policy against a context with this slot
     #: emptied and asserts the action is unchanged.
     truth_state: object | None = None
 
@@ -237,29 +238,37 @@ class ForecastPolicy(Policy):
 
 
 @dataclass(frozen=True)
-class ClairvoyantPolicy(Policy):
-    """Chooses with the true fire state.  Defines the value of perfect information.
+class FutureOraclePolicy(Policy):
+    """Chooses with the realised world, **including future spot ignitions**.
 
-    Not a candidate policy -- an upper bound.  ``J_baseline - J_clairvoyant``
-    is the most any forecast could possibly be worth in a world, and reporting
-    ``Delta J`` as a fraction of it keeps "this forecast adds 0.3 hours" from
-    being read as large or small without a scale.
+    This is a ``FUTURE_ORACLE`` in the sense of
+    :mod:`wildfireguardian_forecast_value.forecast_classes`, not a "perfect
+    forecast": it knows things no forecast conditioned on information at time
+    ``s`` could know.  It is therefore not a candidate policy but a
+    denominator.  ``J_baseline - J_future_oracle`` is the most any information
+    could be worth in a world, and reporting ``Delta J`` as a fraction of it
+    keeps "this forecast adds 0.3 hours" from being read as large or small
+    without a scale.
+
+    A ``PRESENT_STATE_ORACLE`` -- an error-free estimate of the fire as it
+    stands at ``s`` -- is a strictly weaker object and generally does **not**
+    achieve this loss.
     """
 
     tie_break: tuple[str, ...] = ()
-    name: str = "clairvoyant"
+    name: str = "future_oracle"
     uses_forecast: bool = False
 
     def decide(self, ctx: DecisionContext) -> Decision:
         if ctx.truth_state is None:
             raise ValueError(
-                "ClairvoyantPolicy needs DecisionContext.truth_state; it is deliberately "
+                "FutureOraclePolicy needs DecisionContext.truth_state; it is deliberately "
                 "absent from contexts built for candidate policies."
             )
         return Decision(_argmin_action(ctx, ctx.truth_state, self.tie_break))
 
     def to_dict(self) -> dict:
-        return {"policy": self.name, "uses_forecast": False, "clairvoyant": True}
+        return {"policy": self.name, "uses_forecast": False, "future_oracle": True}
 
 
 def _argmin_action(ctx: DecisionContext, state, tie_break: tuple[str, ...]) -> str:
@@ -277,3 +286,9 @@ def _argmin_action(ctx: DecisionContext, state, tie_break: tuple[str, ...]) -> s
         if a in tied:
             return a
     raise AssertionError("unreachable")  # pragma: no cover
+
+
+#: Backwards-compatible alias.  The old name conflated "knows the present
+#: exactly" with "knows the realised future"; see
+#: :mod:`wildfireguardian_forecast_value.forecast_classes`.
+ClairvoyantPolicy = FutureOraclePolicy
